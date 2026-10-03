@@ -16,8 +16,8 @@ namespace ClassicUO.Utility
         {
             if (OperatingSystem.IsIOS())
             {
-                // iOS apps cannot dlopen arbitrary system libraries, use the managed implementation
-                _compressor = new ManagedUniversal();
+                // iOS apps cannot dlopen arbitrary system libraries; use the runtime's bundled zlib
+                _compressor = new DotNetCompressor();
             }
             else if (Environment.Is64BitProcess)
             {
@@ -90,6 +90,90 @@ namespace ClassicUO.Utility
             ZLibError Decompress(IntPtr dest, ref int destLength, IntPtr source, int sourceLength);
         }
 
+
+        /// <summary>
+        /// zlib through System.IO.Compression, which ships its own native zlib with the runtime.
+        /// </summary>
+        private sealed unsafe class DotNetCompressor : ICompressor
+        {
+            public string Version => "System.IO.Compression";
+
+            public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength)
+            {
+                return Compress(dest, ref destLength, source, sourceLength, ZLibQuality.Default);
+            }
+
+            public ZLibError Compress(byte[] dest, ref int destLength, byte[] source, int sourceLength, ZLibQuality quality)
+            {
+                System.IO.Compression.CompressionLevel level = quality switch
+                {
+                    ZLibQuality.None => System.IO.Compression.CompressionLevel.NoCompression,
+                    ZLibQuality.Speed => System.IO.Compression.CompressionLevel.Fastest,
+                    ZLibQuality.Size => System.IO.Compression.CompressionLevel.SmallestSize,
+                    _ => System.IO.Compression.CompressionLevel.Optimal
+                };
+
+                try
+                {
+                    using var output = new System.IO.MemoryStream(dest, 0, destLength, true);
+
+                    using (var zlib = new System.IO.Compression.ZLibStream(output, level, true))
+                    {
+                        zlib.Write(source, 0, sourceLength);
+                    }
+
+                    destLength = (int)output.Position;
+
+                    return ZLibError.Ok;
+                }
+                catch (NotSupportedException)
+                {
+                    // The destination buffer is too small
+                    return ZLibError.BufferError;
+                }
+            }
+
+            public ZLibError Decompress(byte[] dest, ref int destLength, byte[] source, int sourceLength)
+            {
+                fixed (byte* destPtr = dest)
+                fixed (byte* sourcePtr = source)
+                {
+                    return Decompress((IntPtr)destPtr, ref destLength, (IntPtr)sourcePtr, sourceLength);
+                }
+            }
+
+            public ZLibError Decompress(IntPtr dest, ref int destLength, IntPtr source, int sourceLength)
+            {
+                try
+                {
+                    using var input = new System.IO.UnmanagedMemoryStream((byte*)source, sourceLength);
+                    using var zlib = new System.IO.Compression.ZLibStream(input, System.IO.Compression.CompressionMode.Decompress);
+
+                    var output = new Span<byte>((void*)dest, destLength);
+                    int total = 0;
+
+                    while (total < output.Length)
+                    {
+                        int read = zlib.Read(output.Slice(total));
+
+                        if (read == 0)
+                        {
+                            break;
+                        }
+
+                        total += read;
+                    }
+
+                    destLength = total;
+
+                    return ZLibError.Ok;
+                }
+                catch (System.IO.InvalidDataException)
+                {
+                    return ZLibError.DataError;
+                }
+            }
+        }
 
         private sealed class Compressor64 : ICompressor
         {

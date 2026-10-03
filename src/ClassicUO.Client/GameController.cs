@@ -105,7 +105,7 @@ namespace ClassicUO
             SetRefreshRate(Settings.GlobalSettings.FPS);
             _uoSpriteBatch = new UltimaBatcher2D(GraphicsDevice);
 
-            _filter = HandleSdlEvent;
+            _filter = HandleSdlEventCallback;
             SDL_SetEventFilter(_filter, IntPtr.Zero);
 
             if (!ClientHooks.Platform.ManagesTextInput)
@@ -623,6 +623,15 @@ namespace ClassicUO
                 viewport.X = -5;
                 viewport.Y = -5;
             }
+        }
+
+        /// <summary>
+        /// Native callbacks must be static for ahead-of-time compiled runtimes (iOS cannot JIT).
+        /// </summary>
+        [MonoPInvokeCallback(typeof(SDL_EventFilter))]
+        private static bool HandleSdlEventCallback(IntPtr userData, SDL_Event* sdlEvent)
+        {
+            return Client.Game.HandleSdlEvent(userData, sdlEvent);
         }
 
         private bool HandleSdlEvent(IntPtr userData, SDL_Event* sdlEvent)
