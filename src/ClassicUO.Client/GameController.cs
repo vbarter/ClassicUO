@@ -261,6 +261,13 @@ namespace ClassicUO
             }
             */
 
+            if (ClientHooks.Platform.FixedWindowSize)
+            {
+                // The window cannot change size, keep the back buffer matching it
+                width = Window.ClientBounds.Width;
+                height = Window.ClientBounds.Height;
+            }
+
             GraphicManager.PreferredBackBufferWidth = width;
             GraphicManager.PreferredBackBufferHeight = height;
             GraphicManager.ApplyChanges();
@@ -268,6 +275,11 @@ namespace ClassicUO
 
         public void SetWindowBorderless(bool borderless)
         {
+            if (ClientHooks.Platform.FixedWindowSize)
+            {
+                return;
+            }
+
             SDL_WindowFlags flags = (SDL_WindowFlags)SDL_GetWindowFlags(Window.Handle);
 
             if ((flags & SDL_WindowFlags.SDL_WINDOW_BORDERLESS) != 0 && borderless)
@@ -320,6 +332,13 @@ namespace ClassicUO
 
         public void MaximizeWindow()
         {
+            if (ClientHooks.Platform.FixedWindowSize)
+            {
+                SetWindowSize(Window.ClientBounds.Width, Window.ClientBounds.Height);
+
+                return;
+            }
+
             SDL_MaximizeWindow(Window.Handle);
 
             GraphicManager.PreferredBackBufferWidth = Client.Game.Window.ClientBounds.Width;

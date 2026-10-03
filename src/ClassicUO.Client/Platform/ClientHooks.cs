@@ -23,6 +23,12 @@ namespace ClassicUO.Platform
         /// only when needed). When false the client keeps text input enabled for the whole session.
         /// </summary>
         bool ManagesTextInput { get; }
+
+        /// <summary>
+        /// When true the window always fills the screen (mobile). Requests to resize, maximize or
+        /// make the window borderless only resize the back buffer to the actual window size.
+        /// </summary>
+        bool FixedWindowSize { get; }
     }
 
     /// <summary>
@@ -69,5 +75,7 @@ namespace ClassicUO.Platform
         public bool HideGameCursor => false;
 
         public bool ManagesTextInput => false;
+
+        public bool FixedWindowSize => false;
     }
 }
