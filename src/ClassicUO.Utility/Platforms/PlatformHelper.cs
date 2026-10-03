@@ -29,6 +29,11 @@ namespace ClassicUO.Utility.Platforms
 
                     Process.Start(psi);
                 }
+                else if (OperatingSystem.IsIOS())
+                {
+                    // iOS has no processes to spawn, ask SDL to hand the URL to UIApplication
+                    SDL3.SDL.SDL_OpenURL(url);
+                }
                 else if (IsOSX)
                 {
                     Process.Start("open", url);
