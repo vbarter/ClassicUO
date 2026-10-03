@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-2-Clause
+﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using System;
 using System.Linq;
@@ -10,6 +10,7 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Assets;
 using ClassicUO.Network;
+using ClassicUO.Platform;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
@@ -38,13 +39,26 @@ namespace ClassicUO.Game.Scenes
 
         private bool MoveCharacterByMouseInput()
         {
-            if ((_rightMousePressed || _continueRunning) && _world.InGame) // && !Pathfinder.AutoWalking)
+            if (!_world.InGame)
             {
-                if (_world.Player.Pathfinder.AutoWalking)
-                {
-                    _world.Player.Pathfinder.StopAutoWalk();
-                }
+                return false;
+            }
 
+            IMovementSource movementSource = ClientHooks.MovementSource;
+
+            if (movementSource != null && movementSource.TryGetMovement(out float screenX, out float screenY, out bool joystickRun))
+            {
+                // Reuse the exact mouse direction mapping by projecting the request from the origin
+                Direction joystickDirection = (Direction)
+                    GameCursor.GetMouseDirection(0, 0, (int)(screenX * 1000), (int)(screenY * 1000), 1);
+
+                MoveCharacter(joystickDirection, joystickRun);
+
+                return true;
+            }
+
+            if (_rightMousePressed || _continueRunning) // && !Pathfinder.AutoWalking)
+            {
                 int x = Camera.Bounds.X + (Camera.Bounds.Width >> 1);
                 int y = Camera.Bounds.Y + (Camera.Bounds.Height >> 1);
 
@@ -56,35 +70,44 @@ namespace ClassicUO.Game.Scenes
                     y - Mouse.Position.Y
                 );
 
-                Direction facing = direction;
-
-                if (facing == Direction.North)
-                {
-                    facing = (Direction)8;
-                }
-
-                bool run = mouseRange >= 190;
-
-                if (_world.Player.IsDrivingBoat)
-                {
-                    if (!_boatIsMoving || _boatRun != run || _lastBoatDirection != facing - 1)
-                    {
-                        _boatRun = run;
-                        _lastBoatDirection = facing - 1;
-                        _boatIsMoving = true;
-
-                        _world.BoatMovingManager.MoveRequest(facing - 1, (byte)(run ? 2 : 1));
-                    }
-                }
-                else
-                {
-                    _world.Player.Walk(facing - 1, run);
-                }
+                MoveCharacter(direction, mouseRange >= 190);
 
                 return true;
             }
 
             return false;
+        }
+
+        /// <param name="direction">Value returned by <see cref="GameCursor.GetMouseDirection"/>.</param>
+        private void MoveCharacter(Direction direction, bool run)
+        {
+            if (_world.Player.Pathfinder.AutoWalking)
+            {
+                _world.Player.Pathfinder.StopAutoWalk();
+            }
+
+            Direction facing = direction;
+
+            if (facing == Direction.North)
+            {
+                facing = (Direction)8;
+            }
+
+            if (_world.Player.IsDrivingBoat)
+            {
+                if (!_boatIsMoving || _boatRun != run || _lastBoatDirection != facing - 1)
+                {
+                    _boatRun = run;
+                    _lastBoatDirection = facing - 1;
+                    _boatIsMoving = true;
+
+                    _world.BoatMovingManager.MoveRequest(facing - 1, (byte)(run ? 2 : 1));
+                }
+            }
+            else
+            {
+                _world.Player.Walk(facing - 1, run);
+            }
         }
 
         private bool CanDragSelectOnObject(GameObject obj)

@@ -111,28 +111,56 @@ namespace ClassicUO.Input
 
         public static bool MouseInWindow { get; set; }
 
+        /// <summary>
+        /// When set, <see cref="Update"/> uses this window position instead of querying the SDL mouse.
+        /// Lets non-mouse input (touch) drive the pointer. Same units as SDL mouse coordinates.
+        /// </summary>
+        public static Point? InjectedWindowPosition { get; set; }
+
         public static void Update()
         {
-            if (!MouseInWindow)
+            float x, y;
+
+            if (InjectedWindowPosition.HasValue)
             {
-                SDL.SDL_GetGlobalMouseState(out float x, out float y);
+                x = InjectedWindowPosition.Value.X;
+                y = InjectedWindowPosition.Value.Y;
+            }
+            else if (!MouseInWindow)
+            {
+                SDL.SDL_GetGlobalMouseState(out x, out y);
                 SDL.SDL_GetWindowPosition(Client.Game.Window.Handle, out int winX, out int winY);
-                Position.X = (int)x - winX;
-                Position.Y = (int)y - winY;
+                x -= winX;
+                y -= winY;
             }
             else
             {
-                SDL.SDL_GetMouseState(out float x, out float y);
-                Position.X = (int)x;
-                Position.Y = (int)y;
+                SDL.SDL_GetMouseState(out x, out y);
             }
 
-            // Scale the mouse coordinates for the faux-backbuffer and DPI settings
-            Position.X = (int) ((double) Position.X * (Client.Game.GraphicManager.PreferredBackBufferWidth / Client.Game.Window.ClientBounds.Width) / Client.Game.DpiScale);
-
-            Position.Y = (int) ((double) Position.Y * (Client.Game.GraphicManager.PreferredBackBufferHeight / Client.Game.Window.ClientBounds.Height) / Client.Game.DpiScale);
+            Position = WindowToGame(
+                (int)x,
+                (int)y,
+                Client.Game.GraphicManager.PreferredBackBufferWidth,
+                Client.Game.GraphicManager.PreferredBackBufferHeight,
+                Client.Game.Window.ClientBounds.Width,
+                Client.Game.Window.ClientBounds.Height,
+                Client.Game.DpiScale
+            );
 
             IsDragging = LButtonPressed || RButtonPressed || MButtonPressed;
+        }
+
+        /// <summary>
+        /// Scales window coordinates for the faux-backbuffer and DPI settings.
+        /// </summary>
+        internal static Point WindowToGame(int windowX, int windowY, int backBufferWidth, int backBufferHeight, int clientWidth, int clientHeight, float dpiScale)
+        {
+            // NOTE: integer division is intentional, it matches the historical behaviour
+            return new Point(
+                (int) ((double) windowX * (backBufferWidth / clientWidth) / dpiScale),
+                (int) ((double) windowY * (backBufferHeight / clientHeight) / dpiScale)
+            );
         }
     }
 }

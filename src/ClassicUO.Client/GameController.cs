@@ -10,6 +10,7 @@ using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Input;
 using ClassicUO.Network;
 using ClassicUO.Network.Encryption;
+using ClassicUO.Platform;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using ClassicUO.Utility;
@@ -107,7 +108,10 @@ namespace ClassicUO
             _filter = HandleSdlEvent;
             SDL_SetEventFilter(_filter, IntPtr.Zero);
 
-            Microsoft.Xna.Framework.Input.TextInputEXT.StartTextInput();
+            if (!ClientHooks.Platform.ManagesTextInput)
+            {
+                Microsoft.Xna.Framework.Input.TextInputEXT.StartTextInput();
+            }
 
             _displayScale = DpiScale;
 
@@ -136,9 +140,12 @@ namespace ClassicUO
             Log.Trace("Loading plugins...");
             PluginHost?.Initialize();
 
-            foreach (string p in Settings.GlobalSettings.Plugins)
+            if (ClientHooks.Platform.SupportsPlugins)
             {
-                Plugin.Create(p);
+                foreach (string p in Settings.GlobalSettings.Plugins)
+                {
+                    Plugin.Create(p);
+                }
             }
             _pluginsInitialized = true;
 
@@ -407,6 +414,11 @@ namespace ClassicUO
 
             UIManager.Update();
 
+            foreach (IClientExtension extension in ClientHooks.Extensions)
+            {
+                extension.Update();
+            }
+
             _totalElapsed += gameTime.ElapsedGameTime.TotalMilliseconds;
             _currentFpsTime += gameTime.ElapsedGameTime.TotalMilliseconds;
 
@@ -516,9 +528,17 @@ namespace ClassicUO
 
             UIManager.Draw(_uoSpriteBatch);
 
-            _uoSpriteBatch.Begin();
-            UO.GameCursor?.Draw(_uoSpriteBatch);
-            _uoSpriteBatch.End();
+            foreach (IClientExtension extension in ClientHooks.Extensions)
+            {
+                extension.Draw(_uoSpriteBatch);
+            }
+
+            if (!ClientHooks.Platform.HideGameCursor)
+            {
+                _uoSpriteBatch.Begin();
+                UO.GameCursor?.Draw(_uoSpriteBatch);
+                _uoSpriteBatch.End();
+            }
 
             _uoSpriteBatch.GraphicsDevice.SetRenderTarget(null);
 
@@ -588,6 +608,14 @@ namespace ClassicUO
 
         private bool HandleSdlEvent(IntPtr userData, SDL_Event* sdlEvent)
         {
+            foreach (IClientExtension extension in ClientHooks.Extensions)
+            {
+                if (extension.HandleSdlEvent(sdlEvent))
+                {
+                    return true;
+                }
+            }
+
             // Don't pass SDL events to the plugin host before the plugins are initialized
             // or the garbage collector can get screwed up
             if (_pluginsInitialized && Plugin.ProcessWndProc(sdlEvent) != 0)
@@ -721,179 +749,26 @@ namespace ClassicUO
                         UO.GameCursor.Graphic = 0xFFFF;
                     }
 
-                    Mouse.Update();
-
-                    if (Mouse.IsDragging)
-                    {
-                        if (!Scene.OnMouseDragging())
-                        {
-                            UIManager.OnMouseDragging();
-                        }
-                    }
+                    DispatchMouseMotion();
 
                     break;
 
                 case SDL_EventType.SDL_EVENT_MOUSE_WHEEL:
-                    Mouse.Update();
-                    bool isScrolledUp = sdlEvent->wheel.y > 0;
-
-                    Plugin.ProcessMouse(0, (int)sdlEvent->wheel.y);
-
-                    if (!Scene.OnMouseWheel(isScrolledUp))
-                    {
-                        UIManager.OnMouseWheel(isScrolledUp);
-                    }
+                    DispatchMouseWheel((int)sdlEvent->wheel.y);
 
                     break;
 
                 case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_DOWN:
-                {
-                    SDL_MouseButtonEvent mouse = sdlEvent->button;
-
                     // The values in MouseButtonType are chosen to exactly match the SDL values
-                    MouseButtonType buttonType = (MouseButtonType)mouse.button;
-
-                    uint lastClickTime = 0;
-
-                    switch (buttonType)
-                    {
-                        case MouseButtonType.Left:
-                            lastClickTime = Mouse.LastLeftButtonClickTime;
-
-                            break;
-
-                        case MouseButtonType.Middle:
-                            lastClickTime = Mouse.LastMidButtonClickTime;
-
-                            break;
-
-                        case MouseButtonType.Right:
-                            lastClickTime = Mouse.LastRightButtonClickTime;
-
-                            break;
-
-                        case MouseButtonType.XButton1:
-                        case MouseButtonType.XButton2:
-                            break;
-
-                        default:
-                            Log.Warn($"No mouse button handled: {mouse.button}");
-
-                            break;
-                    }
-
-                    Mouse.ButtonPress(buttonType);
-                    Mouse.Update();
-
-                    uint ticks = Time.Ticks;
-
-                    if (lastClickTime + Mouse.MOUSE_DELAY_DOUBLE_CLICK >= ticks)
-                    {
-                        lastClickTime = 0;
-
-                        bool res =
-                            Scene.OnMouseDoubleClick(buttonType)
-                            || UIManager.OnMouseDoubleClick(buttonType);
-
-                        if (!res)
-                        {
-                            if (!Scene.OnMouseDown(buttonType))
-                            {
-                                UIManager.OnMouseButtonDown(buttonType);
-                            }
-                        }
-                        else
-                        {
-                            lastClickTime = 0xFFFF_FFFF;
-                        }
-                    }
-                    else
-                    {
-                        if (
-                            buttonType != MouseButtonType.Left
-                            && buttonType != MouseButtonType.Right
-                        )
-                        {
-                            Plugin.ProcessMouse(sdlEvent->button.button, 0);
-                        }
-
-                        if (!Scene.OnMouseDown(buttonType))
-                        {
-                            UIManager.OnMouseButtonDown(buttonType);
-                        }
-
-                        lastClickTime = Mouse.CancelDoubleClick ? 0 : ticks;
-                    }
-
-                    switch (buttonType)
-                    {
-                        case MouseButtonType.Left:
-                            Mouse.LastLeftButtonClickTime = lastClickTime;
-
-                            break;
-
-                        case MouseButtonType.Middle:
-                            Mouse.LastMidButtonClickTime = lastClickTime;
-
-                            break;
-
-                        case MouseButtonType.Right:
-                            Mouse.LastRightButtonClickTime = lastClickTime;
-
-                            break;
-                    }
+                    DispatchMouseDown((MouseButtonType)sdlEvent->button.button);
 
                     break;
-                }
 
                 case SDL_EventType.SDL_EVENT_MOUSE_BUTTON_UP:
-                {
-                    SDL_MouseButtonEvent mouse = sdlEvent->button;
-
-                    // The values in MouseButtonType are chosen to exactly match the SDL values
-                    MouseButtonType buttonType = (MouseButtonType)mouse.button;
-
-                    uint lastClickTime = 0;
-
-                    switch (buttonType)
-                    {
-                        case MouseButtonType.Left:
-                            lastClickTime = Mouse.LastLeftButtonClickTime;
-
-                            break;
-
-                        case MouseButtonType.Middle:
-                            lastClickTime = Mouse.LastMidButtonClickTime;
-
-                            break;
-
-                        case MouseButtonType.Right:
-                            lastClickTime = Mouse.LastRightButtonClickTime;
-
-                            break;
-
-                        default:
-                            Log.Warn($"No mouse button handled: {mouse.button}");
-
-                            break;
-                    }
-
-                    if (lastClickTime != 0xFFFF_FFFF)
-                    {
-                        if (
-                            !Scene.OnMouseUp(buttonType)
-                            || UIManager.LastControlMouseDown(buttonType) != null
-                        )
-                        {
-                            UIManager.OnMouseButtonUp(buttonType);
-                        }
-                    }
-
-                    Mouse.ButtonRelease(buttonType);
-                    Mouse.Update();
+                    DispatchMouseUp((MouseButtonType)sdlEvent->button.button);
 
                     break;
-                }
+
                 case SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
                 case SDL_EventType.SDL_EVENT_WINDOW_DISPLAY_CHANGED:
                 {
@@ -924,6 +799,171 @@ namespace ClassicUO
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Processes a pointer move at the current <see cref="Mouse.Position"/>.
+        /// Used by SDL mouse events and by alternative input layers (touch).
+        /// </summary>
+        internal void DispatchMouseMotion()
+        {
+            Mouse.Update();
+
+            if (Mouse.IsDragging)
+            {
+                if (!Scene.OnMouseDragging())
+                {
+                    UIManager.OnMouseDragging();
+                }
+            }
+        }
+
+        internal void DispatchMouseWheel(int wheelY)
+        {
+            Mouse.Update();
+            bool isScrolledUp = wheelY > 0;
+
+            Plugin.ProcessMouse(0, wheelY);
+
+            if (!Scene.OnMouseWheel(isScrolledUp))
+            {
+                UIManager.OnMouseWheel(isScrolledUp);
+            }
+        }
+
+        internal void DispatchMouseDown(MouseButtonType buttonType)
+        {
+            uint lastClickTime = 0;
+
+            switch (buttonType)
+            {
+                case MouseButtonType.Left:
+                    lastClickTime = Mouse.LastLeftButtonClickTime;
+
+                    break;
+
+                case MouseButtonType.Middle:
+                    lastClickTime = Mouse.LastMidButtonClickTime;
+
+                    break;
+
+                case MouseButtonType.Right:
+                    lastClickTime = Mouse.LastRightButtonClickTime;
+
+                    break;
+
+                case MouseButtonType.XButton1:
+                case MouseButtonType.XButton2:
+                    break;
+
+                default:
+                    Log.Warn($"No mouse button handled: {(int)buttonType}");
+
+                    break;
+            }
+
+            Mouse.ButtonPress(buttonType);
+            Mouse.Update();
+
+            uint ticks = Time.Ticks;
+
+            if (lastClickTime + Mouse.MOUSE_DELAY_DOUBLE_CLICK >= ticks)
+            {
+                lastClickTime = 0;
+
+                bool res =
+                    Scene.OnMouseDoubleClick(buttonType)
+                    || UIManager.OnMouseDoubleClick(buttonType);
+
+                if (!res)
+                {
+                    if (!Scene.OnMouseDown(buttonType))
+                    {
+                        UIManager.OnMouseButtonDown(buttonType);
+                    }
+                }
+                else
+                {
+                    lastClickTime = 0xFFFF_FFFF;
+                }
+            }
+            else
+            {
+                if (
+                    buttonType != MouseButtonType.Left
+                    && buttonType != MouseButtonType.Right
+                )
+                {
+                    Plugin.ProcessMouse((int)buttonType, 0);
+                }
+
+                if (!Scene.OnMouseDown(buttonType))
+                {
+                    UIManager.OnMouseButtonDown(buttonType);
+                }
+
+                lastClickTime = Mouse.CancelDoubleClick ? 0 : ticks;
+            }
+
+            switch (buttonType)
+            {
+                case MouseButtonType.Left:
+                    Mouse.LastLeftButtonClickTime = lastClickTime;
+
+                    break;
+
+                case MouseButtonType.Middle:
+                    Mouse.LastMidButtonClickTime = lastClickTime;
+
+                    break;
+
+                case MouseButtonType.Right:
+                    Mouse.LastRightButtonClickTime = lastClickTime;
+
+                    break;
+            }
+        }
+
+        internal void DispatchMouseUp(MouseButtonType buttonType)
+        {
+            uint lastClickTime = 0;
+
+            switch (buttonType)
+            {
+                case MouseButtonType.Left:
+                    lastClickTime = Mouse.LastLeftButtonClickTime;
+
+                    break;
+
+                case MouseButtonType.Middle:
+                    lastClickTime = Mouse.LastMidButtonClickTime;
+
+                    break;
+
+                case MouseButtonType.Right:
+                    lastClickTime = Mouse.LastRightButtonClickTime;
+
+                    break;
+
+                default:
+                    Log.Warn($"No mouse button handled: {(int)buttonType}");
+
+                    break;
+            }
+
+            if (lastClickTime != 0xFFFF_FFFF)
+            {
+                if (
+                    !Scene.OnMouseUp(buttonType)
+                    || UIManager.LastControlMouseDown(buttonType) != null
+                )
+                {
+                    UIManager.OnMouseButtonUp(buttonType);
+                }
+            }
+
+            Mouse.ButtonRelease(buttonType);
+            Mouse.Update();
         }
 
         protected override void OnExiting(object sender, EventArgs args)
