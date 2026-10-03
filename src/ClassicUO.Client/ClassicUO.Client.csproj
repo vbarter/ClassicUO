@@ -1,12 +1,18 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
+    <!-- Mobile hosts embed the client in their own executable. The runtime identifier is the
+         reliable signal because it flows to referenced projects during restore and build. -->
+    <CuoAsLibrary Condition="$(RuntimeIdentifier.StartsWith('ios'))">true</CuoAsLibrary>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <OutputType Condition="'$(CuoAsLibrary)' != 'true'">Exe</OutputType>
     <OutputType Condition="'$(CuoAsLibrary)' == 'true'">Library</OutputType>
     <ApplicationIcon>cuoicon.ico</ApplicationIcon>
     <AssemblyName>cuo</AssemblyName>
     <RootNamespace>ClassicUO</RootNamespace>
-    <PublishAot>true</PublishAot>
+    <PublishAot Condition="'$(CuoAsLibrary)' != 'true'">true</PublishAot>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)'=='Release'">

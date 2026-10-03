@@ -18,7 +18,8 @@ namespace ClassicUO
 
         internal static void Init()
         {
-            if (!CUOEnviroment.IsUnix)
+            // iOS links native libraries statically and the runtime owns P/Invoke resolution
+            if (!CUOEnviroment.IsUnix || OperatingSystem.IsIOS())
                 return;
 
             // Get the platform and architecture
