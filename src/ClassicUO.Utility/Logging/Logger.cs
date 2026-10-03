@@ -7,6 +7,9 @@ namespace ClassicUO.Utility.Logging
 {
     public class Logger
     {
+        // Mobile platforms have no terminal, reading or setting console colors throws there
+        private static readonly bool SupportsConsoleColors = !OperatingSystem.IsIOS() && !OperatingSystem.IsAndroid();
+
         private static readonly Dictionary<LogTypes, Tuple<ConsoleColor, string>> _logTypesInfo = new Dictionary<LogTypes, Tuple<ConsoleColor, string>>
         {
             {
@@ -68,7 +71,10 @@ namespace ClassicUO.Utility.Logging
 
         public void Clear()
         {
-            Console.Clear();
+            if (SupportsConsoleColors)
+            {
+                Console.Clear();
+            }
         }
 
         public void PushIndent()
@@ -108,11 +114,18 @@ namespace ClassicUO.Utility.Logging
                 {
                     Console.Write(DateTime.UtcNow);
                     Console.Write(" | ");
-                    ConsoleColor temp = Console.ForegroundColor;
+                    if (SupportsConsoleColors)
+                    {
+                        ConsoleColor temp = Console.ForegroundColor;
 
-                    Console.ForegroundColor = _logTypesInfo[type].Item1;
-                    Console.Write(_logTypesInfo[type].Item2);
-                    Console.ForegroundColor = temp;
+                        Console.ForegroundColor = _logTypesInfo[type].Item1;
+                        Console.Write(_logTypesInfo[type].Item2);
+                        Console.ForegroundColor = temp;
+                    }
+                    else
+                    {
+                        Console.Write(_logTypesInfo[type].Item2);
+                    }
                     Console.Write(" | ");
 
                     if (_indent > 0)
