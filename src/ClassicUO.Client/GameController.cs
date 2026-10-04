@@ -100,6 +100,11 @@ namespace ClassicUO
                 GraphicManager.GraphicsProfile = GraphicsProfile.HiDef;
             }
 
+            if (ClientHooks.Platform.SyncWithDisplay)
+            {
+                SetVSync(true);
+            }
+
             GraphicManager.ApplyChanges();
 
             SetRefreshRate(Settings.GlobalSettings.FPS);
@@ -240,7 +245,9 @@ namespace ClassicUO
 
             Settings.GlobalSettings.FPS = rate;
 
-            _intervalFixedUpdate[0] = frameDelay;
+            // Presenting already waits for the display; with the full frame delay, timer jitter
+            // would skip every other refresh when the rate equals the display's
+            _intervalFixedUpdate[0] = ClientHooks.Platform.SyncWithDisplay ? Math.Max(0f, frameDelay - 1f) : frameDelay;
             _intervalFixedUpdate[1] = 217; // 5 FPS
         }
 
@@ -451,6 +458,7 @@ namespace ClassicUO
 
             double x = _intervalFixedUpdate[
                 !IsActive
+                && ClientHooks.Platform.ThrottleWhenInactive
                 && ProfileManager.CurrentProfile != null
                 && ProfileManager.CurrentProfile.ReduceFPSWhenInactive
                     ? 1

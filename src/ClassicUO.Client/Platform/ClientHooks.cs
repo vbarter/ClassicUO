@@ -29,6 +29,18 @@ namespace ClassicUO.Platform
         /// make the window borderless only resize the back buffer to the actual window size.
         /// </summary>
         bool FixedWindowSize { get; }
+
+        /// <summary>
+        /// When true the client drops to a few frames per second while its window has no focus
+        /// (the ReduceFPSWhenInactive option). Mobile systems suspend background apps themselves.
+        /// </summary>
+        bool ThrottleWhenInactive { get; }
+
+        /// <summary>
+        /// When true presenting waits for the display (vsync) and every loop iteration that is
+        /// due draws a frame, so the game updates once per refresh instead of spinning between frames.
+        /// </summary>
+        bool SyncWithDisplay { get; }
     }
 
     /// <summary>
@@ -77,5 +89,9 @@ namespace ClassicUO.Platform
         public bool ManagesTextInput => false;
 
         public bool FixedWindowSize => false;
+
+        public bool ThrottleWhenInactive => true;
+
+        public bool SyncWithDisplay => false;
     }
 }
