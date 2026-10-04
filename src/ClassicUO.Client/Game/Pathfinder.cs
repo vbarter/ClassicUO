@@ -927,7 +927,8 @@ namespace ClassicUO.Game
             return true;
         }
 
-        public bool WalkTo(int x, int y, int z, int distance)
+        /// <param name="run">Run the whole way; otherwise the pathfinder runs only to far targets.</param>
+        public bool WalkTo(int x, int y, int z, int distance, bool run = false)
         {
             if (_world.Player == null /*|| World.Player.Stamina == 0*/ || _world.Player.IsParalyzed)
             {
@@ -980,6 +981,7 @@ namespace ClassicUO.Game
             _pathSize = 0;
             PathindingCanBeCancelled = true;
             StopAutoWalk();
+            _run = run;
             AutoWalking = true;
 
             if (FindPath(PATHFINDER_MAX_NODES))
