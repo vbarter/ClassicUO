@@ -4794,5 +4794,59 @@ namespace ClassicUO.Resources {
                 return ResourceManager.GetString("ShowHPBarOnNameOverheads", resourceCulture);
             }
         }
+
+        /// <summary>
+        ///   Looks up a localized string similar to System.
+        /// </summary>
+        public static string JournalSystem {
+            get {
+                return ResourceManager.GetString("JournalSystem", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Objects.
+        /// </summary>
+        public static string JournalObjects {
+            get {
+                return ResourceManager.GetString("JournalObjects", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Client.
+        /// </summary>
+        public static string JournalClient {
+            get {
+                return ResourceManager.GetString("JournalClient", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Scroll Up.
+        /// </summary>
+        public static string ScrollUp {
+            get {
+                return ResourceManager.GetString("ScrollUp", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Scroll Down.
+        /// </summary>
+        public static string ScrollDown {
+            get {
+                return ResourceManager.GetString("ScrollDown", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Skills will be placed in default groups..
+        /// </summary>
+        public static string ResetSkillGroupsPrompt {
+            get {
+                return ResourceManager.GetString("ResetSkillGroupsPrompt", resourceCulture);
+            }
+        }
     }
 }

@@ -1703,4 +1703,23 @@
   <data name="ShowHPBarOnNameOverheads" xml:space="preserve">
     <value>在头顶名字上显示血条</value>
   </data>
+  <data name="JournalSystem" xml:space="preserve">
+    <value>系统</value>
+  </data>
+  <data name="JournalObjects" xml:space="preserve">
+    <value>物体</value>
+  </data>
+  <data name="JournalClient" xml:space="preserve">
+    <value>客户端</value>
+  </data>
+  <data name="ScrollUp" xml:space="preserve">
+    <value>向上滚动</value>
+  </data>
+  <data name="ScrollDown" xml:space="preserve">
+    <value>向下滚动</value>
+  </data>
+  <data name="ResetSkillGroupsPrompt" xml:space="preserve">
+    <value>技能将恢复到默认分组。
+确定要重置所有分组吗？</value>
+  </data>
 </root>

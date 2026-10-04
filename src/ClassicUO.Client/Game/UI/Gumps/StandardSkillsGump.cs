@@ -229,7 +229,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 UIManager.Add(
                     new MessageBoxGump(World, 300, 200,
-                                       "Skills will be placed in default groups.\nDo you want reset all groups?",
+                                       ResGumps.ResetSkillGroupsPrompt,
                                                b =>
                                                {
                                                    if (b)

@@ -1703,4 +1703,23 @@ start your first counter</value>
   <data name="ShowHPBarOnNameOverheads" xml:space="preserve">
     <value>Show HP bar on name overheads</value>
   </data>
+  <data name="JournalSystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+  <data name="JournalObjects" xml:space="preserve">
+    <value>Objects</value>
+  </data>
+  <data name="JournalClient" xml:space="preserve">
+    <value>Client</value>
+  </data>
+  <data name="ScrollUp" xml:space="preserve">
+    <value>Scroll Up</value>
+  </data>
+  <data name="ScrollDown" xml:space="preserve">
+    <value>Scroll Down</value>
+  </data>
+  <data name="ResetSkillGroupsPrompt" xml:space="preserve">
+    <value>Skills will be placed in default groups.
+Do you want reset all groups?</value>
+  </data>
 </root>

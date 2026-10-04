@@ -429,7 +429,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
             (
                 0x00D2,
                 0x00D3,
-                "Music",
+                ResGumps.Music,
                 font,
                 hue,
                 false

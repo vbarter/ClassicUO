@@ -213,10 +213,10 @@ namespace ClassicUO.Game.UI.Gumps
                 (_rightBottom.Y + _rightBottom.Height) - 50,
                 34,
                 30,
-                "Accept",
+                ResGumps.Accept,
                 ALPHA_HIT_BUTTON
             );
-            _clear = new HitBox(_accept.X + 175, _accept.Y, 20, 20, "Clear", ALPHA_HIT_BUTTON);
+            _clear = new HitBox(_accept.X + 175, _accept.Y, 20, 20, ResGumps.Clear, ALPHA_HIT_BUTTON);
             _accept.MouseUp += (sender, e) =>
             {
                 OnButtonClick((int)Buttons.Accept);
@@ -233,7 +233,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (leftTop.Y + leftTop.Height) - 18,
                 18,
                 16,
-                "Scroll Up",
+                ResGumps.ScrollUp,
                 ALPHA_HIT_BUTTON
             );
             _leftDown = new HitBox(
@@ -241,7 +241,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _leftBottom.Y,
                 18,
                 16,
-                "Scroll Down",
+                ResGumps.ScrollDown,
                 ALPHA_HIT_BUTTON
             );
 
@@ -250,7 +250,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (rightTop.Y + rightTop.Height) - 18,
                 18,
                 16,
-                "Scroll Up",
+                ResGumps.ScrollUp,
                 ALPHA_HIT_BUTTON
             );
             _rightDown = new HitBox(
@@ -258,7 +258,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _rightBottom.Y,
                 18,
                 16,
-                "Scroll Down",
+                ResGumps.ScrollDown,
                 ALPHA_HIT_BUTTON
             );
 
