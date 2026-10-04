@@ -151,6 +151,8 @@ namespace ClassicUO
                 }
             }
 
+            ResourceLanguage.Apply(Settings.GlobalSettings.Language);
+
             if (string.IsNullOrWhiteSpace(Settings.GlobalSettings.UltimaOnlineDirectory))
             {
                 Settings.GlobalSettings.UltimaOnlineDirectory = CUOEnviroment.ExecutablePath;

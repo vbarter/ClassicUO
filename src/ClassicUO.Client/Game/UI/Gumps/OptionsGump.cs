@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-2-Clause
+﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Assets;
 using ClassicUO.Configuration;
@@ -461,7 +461,7 @@ namespace ClassicUO.Game.UI.Gumps
             rightArea.Add(box);
 
 
-            SettingsSection section = AddSettingsSection(box, "General");
+            SettingsSection section = AddSettingsSection(box, ResGumps.General);
 
 
             section.Add
@@ -529,7 +529,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _fastRotation = AddCheckBox
                 (
                     null,
-                    "Fast rotation",
+                    ResGumps.FastRotation,
                     _currentProfile.FastRotation,
                     startX,
                     startY
@@ -681,7 +681,7 @@ namespace ClassicUO.Game.UI.Gumps
             _use_smooth_boat_movement.IsVisible = Client.Game.UO.Version >= ClientVersion.CV_7090;
 
 
-            SettingsSection section2 = AddSettingsSection(box, "Mobiles");
+            SettingsSection section2 = AddSettingsSection(box, ResGumps.SectionMobiles);
             section2.Y = section.Bounds.Bottom + 40;
 
             section2.Add
@@ -903,7 +903,7 @@ namespace ClassicUO.Game.UI.Gumps
             section2.PopIndent();
             section2.PopIndent();
 
-            SettingsSection section3 = AddSettingsSection(box, "Gumps & Context");
+            SettingsSection section3 = AddSettingsSection(box, ResGumps.SectionGumpsContext);
             section3.Y = section2.Bounds.Bottom + 40;
 
             section3.Add
@@ -1105,7 +1105,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
 
 
-            SettingsSection section4 = AddSettingsSection(box, "Miscellaneous");
+            SettingsSection section4 = AddSettingsSection(box, ResGumps.Miscellaneous);
             section4.Y = section3.Bounds.Bottom + 40;
 
             section4.Add
@@ -1213,7 +1213,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _nameOverheadAlwaysOn = AddCheckBox
                 (
                     null,
-                    "Always show name overheads",
+                    ResGumps.AlwaysShowNameOverheads,
                     _currentProfile.NameOverheadToggled,
                     startX,
                     startY
@@ -1225,7 +1225,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _nameOverheadShowHpBar = AddCheckBox
                 (
                     null,
-                    "Show HP bar on name overheads",
+                    ResGumps.ShowHPBarOnNameOverheads,
                     _currentProfile.NameOverheadShowHpBar,
                     startX,
                     startY
@@ -1362,7 +1362,7 @@ namespace ClassicUO.Game.UI.Gumps
             };
 
 
-            SettingsSection section5 = AddSettingsSection(box, "Terrain & Statics");
+            SettingsSection section5 = AddSettingsSection(box, ResGumps.SectionTerrainStatics);
             section5.Y = section4.Bounds.Bottom + 40;
 
             section5.Add
@@ -1610,7 +1610,7 @@ namespace ClassicUO.Game.UI.Gumps
             box.WantUpdateSize = true;
             rightArea.Add(box);
 
-            SettingsSection section = AddSettingsSection(box, "Game window");
+            SettingsSection section = AddSettingsSection(box, ResGumps.SectionGameWindow);
 
             section.Add
             (
@@ -1729,7 +1729,7 @@ namespace ClassicUO.Game.UI.Gumps
             _gameWindowHeight.SetText(camera.Bounds.Height.ToString());
 
 
-            SettingsSection section2 = AddSettingsSection(box, "Zoom");
+            SettingsSection section2 = AddSettingsSection(box, ResGumps.SectionZoom);
             section2.Y = section.Bounds.Bottom + 40;
 
             _sliderScreenZoom = AddHSlider(
@@ -1788,7 +1788,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
 
 
-            SettingsSection section3 = AddSettingsSection(box, "Lights");
+            SettingsSection section3 = AddSettingsSection(box, ResGumps.SectionLights);
             section3.Y = section2.Bounds.Bottom + 40;
 
             section3.Add
@@ -1869,7 +1869,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
 
 
-            SettingsSection section4 = AddSettingsSection(box, "Misc");
+            SettingsSection section4 = AddSettingsSection(box, ResGumps.SectionMisc);
             section4.Y = section3.Bounds.Bottom + 40;
 
             section4.Add
@@ -1933,7 +1933,7 @@ namespace ClassicUO.Game.UI.Gumps
             );
 
 
-            SettingsSection section5 = AddSettingsSection(box, "Shadows");
+            SettingsSection section5 = AddSettingsSection(box, ResGumps.Shadows);
             section5.Y = section4.Bounds.Bottom + 40;
 
             section5.Add

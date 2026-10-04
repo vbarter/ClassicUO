@@ -14,6 +14,7 @@ namespace ClassicUO.Assets
     {
         private const string MISSING_CLILOC_TEXT = "MegaCliloc: missing {0} [~1_val~] [~2_val~]";
         private string _cliloc;
+        private string _translation;
         private readonly Dictionary<int, string> _entries = new Dictionary<int, string>();
 
         public ClilocLoader(UOFileManager fileManager) : base(fileManager)
@@ -26,6 +27,8 @@ namespace ClassicUO.Assets
             {
                 lang = "enu";
             }
+
+            _translation = $"Cliloc.{lang}.txt";
 
             _cliloc = $"Cliloc.{lang}";
             Log.Trace($"searching for: '{_cliloc}'");
@@ -69,7 +72,98 @@ namespace ClassicUO.Assets
 
             ReadCliloc(path);
 
+            ReadTranslation();
+
             ReadOurs();
+        }
+
+        /// <summary>
+        /// Community translation pack for the selected language (e.g. Cliloc.chs.txt), read after the
+        /// official files. EA's language files stopped being maintained (Cliloc.chs is a stub of a few
+        /// hundred English strings), so translations ship as plain text next to the client files.
+        /// One entry per line: number, a tab, then the text with \n, \t and \\ escaped.
+        /// </summary>
+        private void ReadTranslation()
+        {
+            if (string.IsNullOrEmpty(_translation))
+            {
+                return;
+            }
+
+            string path = FileManager.GetUOFilePath(_translation);
+
+            if (!File.Exists(path))
+            {
+                return;
+            }
+
+            try
+            {
+                int added = ParseTranslation(File.ReadLines(path), _entries);
+                Log.Trace($"{added} translated cliloc string(s) from {Path.GetFileName(path)}");
+            }
+            catch (IOException e)
+            {
+                Log.Warn($"could not read {path}: {e.Message}");
+            }
+        }
+
+        /// <returns>The number of entries read.</returns>
+        internal static int ParseTranslation(IEnumerable<string> lines, IDictionary<int, string> entries)
+        {
+            int added = 0;
+
+            foreach (string line in lines)
+            {
+                if (line.Length == 0 || line[0] == '#')
+                {
+                    continue;
+                }
+
+                int tab = line.IndexOf('\t');
+
+                if (tab <= 0 || !int.TryParse(line.AsSpan(0, tab), out int number))
+                {
+                    continue;
+                }
+
+                entries[number] = string.Intern(Unescape(line.AsSpan(tab + 1)));
+                added++;
+            }
+
+            return added;
+        }
+
+        private static string Unescape(ReadOnlySpan<char> text)
+        {
+            if (text.IndexOf('\\') < 0)
+            {
+                return text.ToString();
+            }
+
+            var sb = new System.Text.StringBuilder(text.Length);
+
+            for (int i = 0; i < text.Length; i++)
+            {
+                char c = text[i];
+
+                if (c == '\\' && i + 1 < text.Length)
+                {
+                    char next = text[++i];
+                    sb.Append(next switch
+                    {
+                        'n' => '\n',
+                        't' => '\t',
+                        _ => next
+                    });
+                }
+                else
+                {
+                    sb.Append(c);
+                }
+            }
+
+            return sb.ToString();
         }
 
         /// <summary>

@@ -1,4 +1,4 @@
-<Project>
+﻿<Project>
 
   <PropertyGroup>
     <LangVersion>Preview</LangVersion>
@@ -6,6 +6,8 @@
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 
     <InvariantGlobalization>true</InvariantGlobalization>
+    <!-- Invariant mode still has to create the cultures of bundled translations (zh-CN) -->
+    <PredefinedCulturesOnly>false</PredefinedCulturesOnly>
     <UseSystemResourceKeys>true</UseSystemResourceKeys>
   </PropertyGroup>
 

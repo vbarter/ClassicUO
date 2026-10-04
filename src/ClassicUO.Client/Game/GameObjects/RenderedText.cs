@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSD-2-Clause
+﻿// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
@@ -120,6 +120,7 @@ namespace ClassicUO.Game
                     }
                     else
                     {
+                        PromoteToUnicodeIfNeeded(value);
                         CreateTexture();
 
                         // Compute layout info for atlas-based drawing.
@@ -252,10 +253,37 @@ namespace ClassicUO.Game
             }
             else
             {
+                r.PromoteToUnicodeIfNeeded(text);
                 r.CreateTexture();
             }
 
             return r;
+        }
+
+        /// <summary>Unicode font used for text the ASCII fonts cannot draw.</summary>
+        private const byte FALLBACK_UNICODE_FONT = 1;
+
+        /// <summary>
+        /// The ASCII fonts only have Latin glyphs. Text with other characters (translated UI texts,
+        /// player names, chat) would come out garbled, so it is drawn with a unicode font instead.
+        /// </summary>
+        private void PromoteToUnicodeIfNeeded(string text)
+        {
+            if (IsUnicode || string.IsNullOrEmpty(text))
+            {
+                return;
+            }
+
+            foreach (char c in text)
+            {
+                if (c > 0xFF)
+                {
+                    IsUnicode = true;
+                    Font = FALLBACK_UNICODE_FONT;
+
+                    return;
+                }
+            }
         }
 
         public Point GetCaretPosition(int caret_index)

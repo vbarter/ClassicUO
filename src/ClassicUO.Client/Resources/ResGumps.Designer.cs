@@ -4705,5 +4705,94 @@ namespace ClassicUO.Resources {
                 return ResourceManager.GetString("OurAssetsReloaded", resourceCulture);
             }
         }
+            /// <summary>
+        ///   Looks up a localized string similar to Mobiles.
+        /// </summary>
+        public static string SectionMobiles {
+            get {
+                return ResourceManager.GetString("SectionMobiles", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Gumps &amp; Context.
+        /// </summary>
+        public static string SectionGumpsContext {
+            get {
+                return ResourceManager.GetString("SectionGumpsContext", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Terrain &amp; Statics.
+        /// </summary>
+        public static string SectionTerrainStatics {
+            get {
+                return ResourceManager.GetString("SectionTerrainStatics", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Game window.
+        /// </summary>
+        public static string SectionGameWindow {
+            get {
+                return ResourceManager.GetString("SectionGameWindow", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Zoom.
+        /// </summary>
+        public static string SectionZoom {
+            get {
+                return ResourceManager.GetString("SectionZoom", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Lights.
+        /// </summary>
+        public static string SectionLights {
+            get {
+                return ResourceManager.GetString("SectionLights", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Misc.
+        /// </summary>
+        public static string SectionMisc {
+            get {
+                return ResourceManager.GetString("SectionMisc", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Fast rotation.
+        /// </summary>
+        public static string FastRotation {
+            get {
+                return ResourceManager.GetString("FastRotation", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Always show name overheads.
+        /// </summary>
+        public static string AlwaysShowNameOverheads {
+            get {
+                return ResourceManager.GetString("AlwaysShowNameOverheads", resourceCulture);
+            }
+        }
+
+        /// <summary>
+        ///   Looks up a localized string similar to Show HP bar on name overheads.
+        /// </summary>
+        public static string ShowHPBarOnNameOverheads {
+            get {
+                return ResourceManager.GetString("ShowHPBarOnNameOverheads", resourceCulture);
+            }
+        }
     }
 }
