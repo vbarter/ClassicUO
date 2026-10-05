@@ -42,6 +42,13 @@ namespace ClassicUO.Platform
         /// </summary>
         bool SyncWithDisplay { get; }
         bool HighResolutionUI { get; }
+
+        /// <summary>
+        /// True while the app runs in the background (mobile): nothing may be drawn (no GPU work is
+        /// allowed there) and the loop only needs to keep the connection alive, so it runs a few
+        /// times per second instead of every frame.
+        /// </summary>
+        bool Suspended { get; }
     }
 
     /// <summary>
@@ -92,6 +99,8 @@ namespace ClassicUO.Platform
         public bool FixedWindowSize => false;
 
         public bool ThrottleWhenInactive => true;
+
+        public bool Suspended => false;
 
         public bool SyncWithDisplay => false;
         public bool HighResolutionUI => false;

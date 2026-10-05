@@ -86,6 +86,9 @@ namespace ClassicUO
 
         public readonly uint[] FrameDelay = new uint[2];
 
+        /// <summary>About four updates per second: enough for the once-per-second ping.</summary>
+        private const int SuspendedUpdateDelayMs = 250;
+
         private readonly List<(uint, Action)> _queuedActions = new ();
 
         public void EnqueueAction(uint time, Action action)
@@ -465,7 +468,14 @@ namespace ClassicUO
             ];
             _suppressedDraw = false;
 
-            if (_totalElapsed > x)
+            if (ClientHooks.Platform.Suspended)
+            {
+                // Background: read packets and send the keep-alive ping, then sleep; drawing is off
+                _suppressedDraw = true;
+                SuppressDraw();
+                Thread.Sleep(SuspendedUpdateDelayMs);
+            }
+            else if (_totalElapsed > x)
             {
                 _totalElapsed %= x;
             }
