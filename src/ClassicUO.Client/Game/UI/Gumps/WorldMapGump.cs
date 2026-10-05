@@ -204,9 +204,8 @@ namespace ClassicUO.Game.UI.Gumps
             if (!TouchMap) return base.Contains(x, y);
             float radius = (Width - 8) / 2f;
             float dx = x - Width / 2f, dy = y - (4 + radius);
-            // Root hit testing must also admit the close button and coordinate footer.
+            // Root hit testing must also admit the coordinate footer.
             return dx * dx + dy * dy <= (radius + 3) * (radius + 3)
-                || ContainsTouchClose(x, y)
                 || (y >= Height - 28 && x >= 0 && x < Width);
         }
 
