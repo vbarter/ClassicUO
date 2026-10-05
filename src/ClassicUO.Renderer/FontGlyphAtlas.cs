@@ -27,6 +27,7 @@ namespace ClassicUO.Renderer
 
     public sealed class FontGlyphAtlas : IDisposable
     {
+        public static Func<char, bool, bool, bool, uint, FontsLoader.SingleGlyphInfo, FontsLoader.SingleGlyphInfo> UnicodeRasterizer { get; set; }
         private readonly Dictionary<long, GlyphAtlasEntry> _cache = new Dictionary<long, GlyphAtlasEntry>();
         private readonly Dictionary<(long, uint), GlyphAtlasEntry> _coloredCache = new Dictionary<(long, uint), GlyphAtlasEntry>();
         private readonly TextureAtlas _atlas;
@@ -99,6 +100,8 @@ namespace ClassicUO.Renderer
             if (isUnicode)
             {
                 glyphInfo = _fontsLoader.RenderSingleGlyphUnicode(font, character, hasBorder, isSolid, isItalic, colorOrHue);
+                if (UnicodeRasterizer != null && glyphInfo.Width > 0 && glyphInfo.Height > 0)
+                    glyphInfo = UnicodeRasterizer(character, hasBorder, isSolid, isItalic, colorOrHue, glyphInfo);
             }
             else
             {
@@ -121,8 +124,8 @@ namespace ClassicUO.Renderer
 
             var texture = _atlas.AddSprite(
                 glyphInfo.Data,
-                glyphInfo.Width,
-                glyphInfo.Height,
+                glyphInfo.Width * Math.Max(1, glyphInfo.RasterScale),
+                glyphInfo.Height * Math.Max(1, glyphInfo.RasterScale),
                 out var uv
             );
 

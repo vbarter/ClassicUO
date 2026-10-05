@@ -176,7 +176,7 @@ namespace ClassicUO.Game.UI.Gumps
                 _totalReal += skill.Base;
                 _totalValue += skill.Value;
 
-                Label skillName = new Label(skill.Name, true, 1153, font: 3);
+                Label skillName = new Label(skill.DisplayName, true, 1153, font: 3);
                 Label skillValueBase = new Label(skill.Base.ToString(), true, 1153, font: 3);
                 Label skillValue = new Label(skill.Value.ToString(), true, 1153, font: 3);
                 Label skillCap = new Label(skill.Cap.ToString(), true, 1153, font: 3);

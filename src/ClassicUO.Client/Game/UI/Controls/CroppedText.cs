@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Resources;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Utility;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             _gameText = RenderedText.Create
             (
-                text,
+                UiLocalization.Translate(text),
                 hue,
                 (byte) (Client.Game.UO.Version >= ClientVersion.CV_305D ? 1 : 0),
                 true,

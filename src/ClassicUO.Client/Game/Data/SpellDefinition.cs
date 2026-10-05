@@ -112,6 +112,16 @@ namespace ClassicUO.Game.Data
         public readonly int MinSkill;
 
         public readonly string Name;
+        public string DisplayName => UiLocalization.Translate(Name);
+
+        public string GetDisplayMessage(string format = null)
+        {
+            if (!string.IsNullOrWhiteSpace(format))
+                return format.Replace("{power}", PowerWords).Replace("{spell}", DisplayName).Trim();
+            if (string.IsNullOrEmpty(PowerWords)) return DisplayName;
+            return UiLocalization.IsChinese ? DisplayName + "（" + PowerWords + "）" : PowerWords;
+        }
+
         public readonly string PowerWords;
         public readonly Reagents[] Regs;
         public readonly TargetType TargetType;

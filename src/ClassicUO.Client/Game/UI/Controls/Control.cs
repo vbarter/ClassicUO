@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Resources;
 using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Input;
@@ -362,7 +363,7 @@ namespace ClassicUO.Game.UI.Controls
 
             if (!string.IsNullOrEmpty(text))
             {
-                Tooltip = text;
+                Tooltip = UiLocalization.Translate(text);
                 TooltipMaxLength = maxWidth;
             }
         }

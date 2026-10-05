@@ -1,4 +1,5 @@
 ﻿
+using ClassicUO.Resources;
 using ClassicUO.Configuration;
 using ClassicUO.Game.UI.Controls;
 
@@ -21,7 +22,7 @@ namespace ClassicUO.Game.UI.Gumps
                 Alpha = 0.8f
             };
 
-            Label text = new Label($"Edit macro: {name}", true, 15)
+            Label text = new Label(UiLocalization.Format("Edit macro: {0}", "编辑宏：{0}", name), true, 15)
             {
                 X = camera.Bounds.Width / 2 - 105,
                 Y = macroGumpBackground.Y + 2

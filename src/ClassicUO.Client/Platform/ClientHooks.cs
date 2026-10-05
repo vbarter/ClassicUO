@@ -41,6 +41,7 @@ namespace ClassicUO.Platform
         /// due draws a frame, so the game updates once per refresh instead of spinning between frames.
         /// </summary>
         bool SyncWithDisplay { get; }
+        bool HighResolutionUI { get; }
     }
 
     /// <summary>
@@ -93,5 +94,6 @@ namespace ClassicUO.Platform
         public bool ThrottleWhenInactive => true;
 
         public bool SyncWithDisplay => false;
+        public bool HighResolutionUI => false;
     }
 }

@@ -123,7 +123,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             _currentChannelLabel = new Label
             (
-                World.ChatManager.CurrentChannelName,
+                UiLocalization.ChatChannelName(World.ChatManager.CurrentChannelName),
                 false,
                 0x0386,
                 345,
@@ -243,9 +243,10 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void UpdateConference()
         {
-            if (_currentChannelLabel.Text != World.ChatManager.CurrentChannelName)
+            string displayName = UiLocalization.ChatChannelName(World.ChatManager.CurrentChannelName);
+            if (_currentChannelLabel.Text != displayName)
             {
-                _currentChannelLabel.Text = World.ChatManager.CurrentChannelName;
+                _currentChannelLabel.Text = displayName;
             }
         }
 
@@ -435,7 +436,7 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     _label = new Label
                     (
-                        text,
+                        UiLocalization.ChatChannelName(text),
                         false,
                         0x49,
                         Width,

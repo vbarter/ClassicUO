@@ -2039,7 +2039,7 @@ namespace ClassicUO.Network
                                         world,
                                         string.Format(
                                             ResGeneral.YourSkillIn0Has1By2ItIsNow3,
-                                            skill.Name,
+                                            skill.DisplayName,
                                             change < 0
                                                 ? ResGeneral.Decreased
                                                 : ResGeneral.Increased,
@@ -3880,7 +3880,7 @@ namespace ClassicUO.Network
 
                     GameActions.Print(
                         world,
-                        string.Format(ResGeneral.YouHaveJoinedThe0Channel, channelName),
+                        string.Format(ResGeneral.YouHaveJoinedThe0Channel, UiLocalization.ChatChannelName(channelName)),
                         ProfileManager.CurrentProfile.ChatMessageHue,
                         MessageType.Regular,
                         1
@@ -3894,7 +3894,7 @@ namespace ClassicUO.Network
 
                     GameActions.Print(
                         world,
-                        string.Format(ResGeneral.YouHaveLeftThe0Channel, channelName),
+                        string.Format(ResGeneral.YouHaveLeftThe0Channel, UiLocalization.ChatChannelName(channelName)),
                         ProfileManager.CurrentProfile.ChatMessageHue,
                         MessageType.Regular,
                         1

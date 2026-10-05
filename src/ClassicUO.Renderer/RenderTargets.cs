@@ -32,14 +32,15 @@ namespace ClassicUO.Renderer
             _lightsHue = lightsHue;
         }
 
-        public void EnsureSizes(GraphicsDevice graphicsDevice, Rectangle gameWindowOnScreen, Rectangle gameWorldSceneAfterDPI, float dpiScale)
+        public void EnsureSizes(GraphicsDevice graphicsDevice, Rectangle gameWindowOnScreen, Rectangle gameWorldSceneAfterDPI, float dpiScale, bool highResolutionUI = false)
         {
             _gameWindowOnScreen = gameWindowOnScreen;
             _gameWindowAfterDPI = ScaleRectangle(gameWindowOnScreen, dpiScale);
             _gameWorldSceneOnScreen = ScaleRectangle(gameWorldSceneAfterDPI, 1/dpiScale);
             _gameWorldSceneAfterDPI = gameWorldSceneAfterDPI;
 
-            EnsureSize(graphicsDevice, ref _uiRenderTarget, _gameWindowAfterDPI.Width, _gameWindowAfterDPI.Height);
+            Rectangle uiSize = highResolutionUI ? gameWindowOnScreen : _gameWindowAfterDPI;
+            EnsureSize(graphicsDevice, ref _uiRenderTarget, uiSize.Width, uiSize.Height);
             EnsureSize(graphicsDevice, ref _lightRenderTarget, _gameWorldSceneAfterDPI.Width, _gameWorldSceneAfterDPI.Height);
             EnsureSize(graphicsDevice, ref _worldRenderTarget, _gameWorldSceneAfterDPI.Width, _gameWorldSceneAfterDPI.Height);
 

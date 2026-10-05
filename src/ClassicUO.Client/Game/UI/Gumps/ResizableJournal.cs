@@ -1,4 +1,5 @@
-﻿using ClassicUO.Configuration;
+﻿using ClassicUO.Resources;
+using ClassicUO.Configuration;
 using ClassicUO.Game.Data;
 using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.Managers;
@@ -583,7 +584,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Add("X Delete Tab", () =>
                 {
-                    UIManager.Add(new QuestionGump(world, $"Delete [{name}] tab?", (yes) =>
+                    UIManager.Add(new QuestionGump(world, UiLocalization.Format("Delete [{0}] tab?", "删除标签页 [{0}]？", name), (yes) =>
                     {
                         if (yes)
                         {

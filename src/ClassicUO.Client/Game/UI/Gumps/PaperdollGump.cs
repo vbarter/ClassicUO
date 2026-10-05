@@ -7,6 +7,7 @@ using ClassicUO.Game.Managers;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
+using ClassicUO.Resources;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
@@ -33,6 +34,7 @@ namespace ClassicUO.Game.UI.Gumps
         private GumpPic _profilePic;
         private readonly List<EquipmentSlot> _slots = new List<EquipmentSlot>();
         private Label _titleLabel;
+        private string _sourceTitle;
         private GumpPic _virtueMenuPic;
         private Button _warModeBtn;
 
@@ -312,7 +314,7 @@ namespace ClassicUO.Game.UI.Gumps
             }
 
             // Name and title
-            _titleLabel = new Label("", false, 0x0386, 185, font: 1) { X = 39, Y = 262 };
+            _titleLabel = new Label("", false, 0, 185, font: 1) { X = 39, Y = 262 };
 
             Add(_titleLabel);
 
@@ -329,7 +331,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         public void UpdateTitle(string text)
         {
-            _titleLabel.Text = text;
+            _sourceTitle = text;
+            _titleLabel.Text = UiLocalization.PaperdollTitle(text);
         }
 
         private void VirtueMenu_MouseDoubleClickEvent(object sender, MouseDoubleClickEventArgs args)
@@ -551,7 +554,7 @@ namespace ClassicUO.Game.UI.Gumps
         {
             Mobile mobile = World.Mobiles.Get(LocalSerial);
 
-            if (mobile != null && mobile.Title != _titleLabel.Text)
+            if (mobile != null && mobile.Title != _sourceTitle)
             {
                 UpdateTitle(mobile.Title);
             }
@@ -740,7 +743,7 @@ namespace ClassicUO.Game.UI.Gumps
                 {
                     _itemGump?.Dispose();
                     _itemGump = null;
-                    SetTooltip($"{Layer} slot");
+                    SetTooltip(UiLocalization.Format("{0} slot", "{0}\u88c5\u5907\u680f", UiLocalization.Translate(Layer.ToString())));
                 }
 
                 Mobile mobile = _paperDollGump.World.Mobiles.Get(_paperDollGump.LocalSerial);

@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Game.Data;
 using ClassicUO.Game.Managers;
@@ -108,9 +108,9 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     0x938,
                     0x939,
-                    ResGumps.ShowReal,
+                    UiLocalization.IsChinese ? "实际" : ResGumps.ShowReal,
                     1,
-                    0x0386,
+                    UiLocalization.IsChinese ? (ushort)0 : (ushort)0x0386,
                     false
                 ) { X = _newGroupButton.X + _newGroupButton.Width + 30, Y = _newGroupButton.Y - 6 }
             );
@@ -121,9 +121,9 @@ namespace ClassicUO.Game.UI.Gumps
                 (
                     0x938,
                     0x939,
-                    ResGumps.ShowCaps,
+                    UiLocalization.IsChinese ? "上限" : ResGumps.ShowCaps,
                     1,
-                    0x0386,
+                    UiLocalization.IsChinese ? (ushort)0 : (ushort)0x0386,
                     false
                 ) { X = _newGroupButton.X + _newGroupButton.Width + 30, Y = _newGroupButton.Y + 7 }
             );
@@ -289,6 +289,11 @@ namespace ClassicUO.Game.UI.Gumps
             _skillsLabelSum.Y = _bottomComment.Y + 2;
             _checkReal.Y = _newGroupButton.Y - 6;
             _checkCaps.Y = _newGroupButton.Y + 7;
+            if (UiLocalization.IsChinese)
+            {
+                _checkReal.Y = _checkCaps.Y = _newGroupButton.Y + 2;
+                _checkCaps.X = _checkReal.X + 65;
+            }
 
 
             base.Update();
@@ -393,16 +398,17 @@ namespace ClassicUO.Game.UI.Gumps
 
                 Add(_button);
 
-                int width = Client.Game.UO.FileManager.Fonts.GetWidthASCII(6, group.Name);
+                string displayName = UiLocalization.SkillGroupName(group.Name);
+                int width = UiLocalization.IsChinese ? Client.Game.UO.FileManager.Fonts.GetWidthUnicode(1, displayName) : Client.Game.UO.FileManager.Fonts.GetWidthASCII(6, displayName);
 
                 Add
                 (
                     _textbox = new StbTextBox
                     (
-                        6,
+                        UiLocalization.IsChinese ? (byte)1 : (byte)6,
                         -1,
                         200,
-                        false,
+                        UiLocalization.IsChinese,
                         FontStyle.Fixed
                     )
                     {
@@ -414,7 +420,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 );
 
-                _textbox.SetText(group.Name);
+                _textbox.SetText(displayName);
 
                 int xx = width + 11 + 16;
 
@@ -624,7 +630,7 @@ namespace ClassicUO.Game.UI.Gumps
                     _textbox.SetText(text);
                 }
 
-                int width = Client.Game.UO.FileManager.Fonts.GetWidthASCII(6, text);
+                int width = _textbox.IsUnicode ? Client.Game.UO.FileManager.Fonts.GetWidthUnicode(1, text) : Client.Game.UO.FileManager.Fonts.GetWidthASCII(6, text);
                 int xx = width + 11 + 16;
 
                 if (xx > 0)
@@ -816,7 +822,7 @@ namespace ClassicUO.Game.UI.Gumps
                     Add(_buttonStatus);
 
                     Label name;
-                    Add(name = new Label(skill.Name, false, 0x0288, font: 9));
+                    Add(name = new Label(skill.DisplayName, false, 0x0288, font: 9));
                     name.X = 22;
 
                     Add(_value = new Label("", false, 0x0288, font: 9));

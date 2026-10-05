@@ -9,6 +9,7 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.IO;
+using ClassicUO.Platform;
 using ClassicUO.Network.Encryption;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
@@ -30,6 +31,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Xml;
 using static ClassicUO.Game.UI.Gumps.WorldMapGump;
+using static SDL3.SDL;
 using SpriteFont = ClassicUO.Renderer.SpriteFont;
 
 namespace ClassicUO.Game.UI.Gumps
@@ -56,6 +58,8 @@ namespace ClassicUO.Game.UI.Gumps
         private static readonly Color _semiTransparentWhiteForGrid = new Color(255, 255, 255, 56);
         private static Point _last_position = new Point(100, 100);
         private static Texture2D _mapTexture;
+        private RenderedText _waitLabel;
+        private RenderedText _coordinateLabel;
         private Map.Map _map = null;
 
         private Point _center, _lastScroll, _mouseCenter, _scroll;
@@ -68,6 +72,7 @@ namespace ClassicUO.Game.UI.Gumps
         private bool _mapMarkersLoaded;
         private List<string> _hiddenZoneFiles;
         private ZoneSets _zoneSets = new ZoneSets();
+        private readonly Dictionary<string, RenderedText> _unicodeMarkerLabels = new Dictionary<string, RenderedText>();
         private SpriteFont _markerFont = Fonts.Map1;
         private int _markerFontIndex = 1;
         private readonly Dictionary<string, ContextMenuItemEntry> _options = new Dictionary<string, ContextMenuItemEntry>();
@@ -92,6 +97,9 @@ namespace ClassicUO.Game.UI.Gumps
         private int _mapLoading;
         private uint _mapLoadingTime;
         private Task _loadingTask;
+        private int _touchDiameter;
+        private bool _touchPanMoved;
+        private bool TouchMap => ClientHooks.Platform.FixedWindowSize;
 
         public WorldMapGump(World world) : base
         (
@@ -106,13 +114,15 @@ namespace ClassicUO.Game.UI.Gumps
         {
             CanMove = true;
             AcceptMouseInput = true;
-            CanCloseWithRightClick = false;
+            CanCloseWithRightClick = TouchMap;
 
             X = _last_position.X;
             Y = _last_position.Y;
 
             _map = World.Map;
             LoadSettings();
+            // Mobile saved bounds include the ring padding and coordinate footer.
+            _touchDiameter = Math.Max(120, Height == Width + 28 ? Width - 8 : Math.Min(Width, Height));
 
             GameActions.Print(World, ResGumps.WorldMapLoading, 0x35);
             ChangeMap(World.MapIndex);
@@ -139,7 +149,7 @@ namespace ClassicUO.Game.UI.Gumps
                     SaveSettings();
                 }
 
-                ShowBorder = !_isTopMost;
+                ShowBorder = !TouchMap && !_isTopMost;
 
                 LayerOrder = _isTopMost ? UILayer.Over : UILayer.Under;
             }
@@ -163,6 +173,52 @@ namespace ClassicUO.Game.UI.Gumps
                 }
             }
         }
+
+        private void UpdateTouchLayout()
+        {
+            if (TouchMap)
+            {
+                Rectangle screen = Client.Game.ClientBounds;
+                int left = 8, right = 8;
+                if (SDL_GetWindowSafeArea(Client.Game.Window.Handle, out SDL_Rect safe))
+                {
+                    var game = Client.Game;
+                    var inset = Mouse.WindowToGame(safe.x, 0,
+                        game.GraphicManager.PreferredBackBufferWidth, game.GraphicManager.PreferredBackBufferHeight,
+                        game.Window.ClientBounds.Width, game.Window.ClientBounds.Height, game.DpiScale);
+                    left += inset.X;
+                    right += Mouse.WindowToGame(game.Window.ClientBounds.Width - safe.x - safe.w, 0,
+                        game.GraphicManager.PreferredBackBufferWidth, game.GraphicManager.PreferredBackBufferHeight,
+                        game.Window.ClientBounds.Width, game.Window.ClientBounds.Height, game.DpiScale).X;
+                }
+                int diameter = Math.Clamp(_touchDiameter, 120, Math.Max(120, Math.Min(screen.Width - left - right - 8, screen.Height - 250)));
+                ResizeWindow(new Point(diameter + 8, diameter + 36));
+                X = Math.Clamp(X, left, Math.Max(left, screen.Width - right - diameter - 8));
+                Y = Math.Clamp(Y, 36, Math.Max(36, screen.Height - diameter - 250));
+                ShowBorder = false;
+            }
+        }
+
+        public override bool Contains(int x, int y)
+        {
+            if (!TouchMap) return base.Contains(x, y);
+            float radius = (Width - 8) / 2f;
+            float dx = x - Width / 2f, dy = y - (4 + radius);
+            // Root hit testing must also admit the close button and coordinate footer.
+            return dx * dx + dy * dy <= (radius + 3) * (radius + 3)
+                || ContainsTouchClose(x, y)
+                || (y >= Height - 28 && x >= 0 && x < Width);
+        }
+
+        public void SetTouchZoom(float zoom)
+        {
+            int nearest = 0;
+            for (int i = 1; i < _zooms.Length; i++)
+                if (Math.Abs(_zooms[i] - zoom) < Math.Abs(_zooms[nearest] - zoom)) nearest = i;
+            _zoomIndex = nearest;
+        }
+
+        public void FinishTouchZoom() => SaveSettings();
 
 
         public override void Restore(XmlElement xml)
@@ -356,7 +412,7 @@ namespace ClassicUO.Game.UI.Gumps
             {
                 Color = Color.Aquamarine,
                 MapId = _map.Index,
-                Name = isManualType ? $"Go to: {x}, {y}" : "",
+                Name = isManualType ? UiLocalization.Format("Go to: {0}, {1}", "前往：{0}, {1}", x, y) : "",
                 X = x,
                 Y = y,
                 ZoomIndex = 1
@@ -528,6 +584,7 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Update()
         {
+            UpdateTouchLayout();
             base.Update();
 
             if (IsDisposed)
@@ -700,12 +757,24 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override void Dispose()
         {
+            if (IsDisposed) return;
+            ClearUnicodeMarkerLabels();
             SaveSettings();
             World.WMapManager.SetEnable(false);
 
             Client.Game.UO.GameCursor.IsDraggingCursorForced = false;
 
+            _waitLabel?.Destroy();
+            _waitLabel = null;
+            _coordinateLabel?.Destroy();
+            _coordinateLabel = null;
             base.Dispose();
+        }
+
+        private void ClearUnicodeMarkerLabels()
+        {
+            foreach (RenderedText label in _unicodeMarkerLabels.Values) label.Destroy();
+            _unicodeMarkerLabels.Clear();
         }
 
         private void SetFont(int fontIndex)
@@ -771,6 +840,7 @@ namespace ClassicUO.Game.UI.Gumps
         internal class WMapMarker
         {
             public string Name { get; set; }
+            public bool IsUserDefined { get; set; }
             public int X { get; set; }
             public int Y { get; set; }
             public int MapId { get; set; }
@@ -1161,6 +1231,7 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         var map = _map;
                         Interlocked.Increment(ref _mapLoading);
+                        var generation = System.Diagnostics.Stopwatch.StartNew();
 
                         var size = (realWidth + OFFSET_PIX) * (realHeight + OFFSET_PIX);
                         var allZ = new sbyte[size];
@@ -1321,19 +1392,24 @@ namespace ClassicUO.Game.UI.Gumps
 
                         //quantizer.Clear();
 
-                        var imageEncoder = new PngEncoder
+
+                        // Upload the pixels as they are and cache them with FNA's PNG writer: ImageSharp's
+                        // palette encoder took about a minute for a full map on mobile devices
+                        int width = realWidth + OFFSET_PIX;
+                        int height = realHeight + OFFSET_PIX;
+                        var texture = new Texture2D(Client.Game.GraphicsDevice, width, height, false, SurfaceFormat.Color);
+
+                        using (var pin = imgBuffer.Pin())
                         {
-                            ColorType = PngColorType.Palette,
-                            CompressionLevel = PngCompressionLevel.DefaultCompression,
-                            SkipMetadata = true,
-                            FilterMethod = PngFilterMethod.None,
-                            ChunkFilter = PngChunkFilter.ExcludeAll,
-                            TransparentColorMode = PngTransparentColorMode.Clear,
-                        };
+                            texture.SetDataPointerEXT(0, null, (IntPtr)pin.Pointer, width * height * 4);
+                        }
+
+                        _mapTexture = texture;
 
                         Directory.CreateDirectory(_mapsCachePath);
                         using var stream2 = File.Create(fileMapPath);
-                        img.Save(stream2, imageEncoder);
+                        texture.SaveAsPng(stream2, width, height);
+                        Log.Trace($"World map {mapIndex} generated in {generation.ElapsedMilliseconds} ms");
                     }
                     catch (Exception ex)
                     {
@@ -1347,7 +1423,7 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                 }
 
-                if (File.Exists(fileMapPath))
+                if ((_mapTexture == null || _mapTexture.IsDisposed) && File.Exists(fileMapPath))
                 {
                     using var stream = File.OpenRead(fileMapPath);
                     _mapTexture = Texture2D.FromStream(Client.Game.GraphicsDevice, stream);
@@ -1809,6 +1885,7 @@ namespace ClassicUO.Game.UI.Gumps
                 MapId = _map.Index,
                 MarkerIconName = markerIcon,
                 Name = markerName,
+                IsUserDefined = true,
                 ZoomIndex = markerZoomLevel
             };
 
@@ -1862,7 +1939,9 @@ namespace ClassicUO.Game.UI.Gumps
                     {
                         continue;
                     }
-                    tempList.Add(ParseMarker(splits));
+                    WMapMarker marker = ParseMarker(splits);
+                    marker.IsUserDefined = true;
+                    tempList.Add(marker);
                 }
             }
 
@@ -1891,7 +1970,7 @@ namespace ClassicUO.Game.UI.Gumps
             int gX = x + 4;
             int gY = y + 4;
             int gWidth = Width - 8;
-            int gHeight = Height - 8;
+            int gHeight = TouchMap ? gWidth : Height - 8;
 
             int centerX = _center.X + 1;
             int centerY = _center.Y + 1;
@@ -1908,6 +1987,10 @@ namespace ClassicUO.Game.UI.Gumps
 
             renderLists.AddGumpNoAtlas(batcher =>
             {
+                bool circular = TouchMap;
+                if (circular) RoundUiRenderer.BeginClip(batcher, new Rectangle(gX, gY, gWidth, gHeight), layerDepth);
+                try
+                {
                 batcher.Draw
                 (
                     SolidColorTextureCache.GetTexture(Color.Black),
@@ -1922,21 +2005,24 @@ namespace ClassicUO.Game.UI.Gumps
                     layerDepth
                 );
 
-                if (_mapLoading == 1)
+                // Also while the cache file name is still being hashed, before the map is generated
+                bool waitingForMap = _mapLoading == 1
+                    || (_loadingTask is { IsCompleted: false } && (_mapTexture == null || _mapTexture.IsDisposed));
+
+                if (waitingForMap)
                 {
                     if (batcher.ClipBegin(gX, gY, gWidth, gHeight))
                     {
-                        var str = "Please wait, I'm making the map file...".AsSpan();
-                        //str = str[..(str.Length - (int)_mapLoadingTime % 3)];
+                        // A UO unicode font: the bitmap font has no glyphs for translated (e.g. Chinese) text
+                        string waitText = UiLocalization.Translate("Please wait, I'm making the map file...");
 
-                        //if (Time.Ticks > _mapLoadingTime)
-                        //    _mapLoadingTime = Time.Ticks + 1000;
+                        if (_waitLabel == null || _waitLabel.Text != waitText)
+                        {
+                            _waitLabel?.Destroy();
+                            _waitLabel = RenderedText.Create(waitText, 0x0026, 1, isunicode: true, style: FontStyle.BlackBorder);
+                        }
 
-                        var strSize = Fonts.Bold.MeasureString(str);
-                        var pos = strSize * -0.5f;
-                        pos.X += gX + halfWidth;
-                        pos.Y += gY + halfHeight;
-                        batcher.DrawString(Fonts.Bold, str, pos, new Vector3(38, 1, 1), layerDepth);
+                        _waitLabel.Draw(batcher, gX + halfWidth - _waitLabel.Width / 2, gY + halfHeight - _waitLabel.Height / 2, layerDepth);
 
                         batcher.ClipEnd();
                     }
@@ -1992,6 +2078,22 @@ namespace ClassicUO.Game.UI.Gumps
 
                         batcher.ClipEnd();
                     }
+                }
+                }
+                finally
+                {
+                    if (circular) RoundUiRenderer.EndClip(batcher);
+                }
+                if (circular)
+                {
+                    var center = new Vector2(gX + halfWidth, gY + halfHeight);
+                    RoundUiRenderer.Ring(batcher, center, halfWidth - 1, new Color(64, 48, 25), 5, layerDepth);
+                    RoundUiRenderer.Ring(batcher, center, halfWidth - 2, new Color(183, 148, 83), 2, layerDepth);
+                    string coordinates = $"{World.Player.X}, {World.Player.Y}  {(UiLocalization.IsChinese ? "缩放" : "Zoom")} {Zoom:0.##}";
+                    if (_coordinateLabel == null)
+                        _coordinateLabel = RenderedText.Create(coordinates, 0x03B2, 1, isunicode: true, style: FontStyle.BlackBorder);
+                    else if (_coordinateLabel.Text != coordinates) _coordinateLabel.Text = coordinates;
+                    _coordinateLabel.Draw(batcher, gX + halfWidth - _coordinateLabel.Width / 2, gY + gHeight + 6, layerDepth);
                 }
                 return true;
             });
@@ -2274,7 +2376,7 @@ namespace ClassicUO.Game.UI.Gumps
                 DrawGrid(batcher, srcRect, gX, gY, halfWidth, halfHeight, Zoom, layerDepth);
             }
 
-            if (_showCoordinates)
+            if (_showCoordinates && !TouchMap)
             {
                 string text = $"{World.Player.X}, {World.Player.Y} ({World.Player.Z}) [{_zoomIndex}]";
 
@@ -2288,7 +2390,7 @@ namespace ClassicUO.Game.UI.Gumps
                 batcher.DrawString(Fonts.Bold, text, gX + 5, gY + 5, hueVector, layerDepth);
             }
 
-            if (_showMouseCoordinates && _lastMousePosition != null)
+            if (_showMouseCoordinates && !TouchMap && _lastMousePosition != null)
             {
                 CanvasToWorld(_lastMousePosition.Value.X, _lastMousePosition.Value.Y, out int mouseWorldX, out int mouseWorldY);
 
@@ -2599,7 +2701,22 @@ namespace ClassicUO.Game.UI.Gumps
             rot.X += x + width;
             rot.Y += y + height;
 
-            Vector2 size = _markerFont.MeasureString(marker.Name);
+            string displayName = UiLocalization.MapPlaceName(marker.Name, marker.IsUserDefined);
+            RenderedText unicodeLabel = null;
+            // Map sprite fonts contain Latin glyphs only. Use the game's Unicode atlas for CJK labels.
+            if (displayName.Any(c => c > 0xFF))
+            {
+                if (!_unicodeMarkerLabels.TryGetValue(displayName, out unicodeLabel))
+                {
+                    // Bound the cache while navigating large marker collections.
+                    if (_unicodeMarkerLabels.Count >= 256) ClearUnicodeMarkerLabels();
+                    unicodeLabel = RenderedText.Create(displayName, font: 1, style: FontStyle.BlackBorder, maxWidth: 240);
+                    _unicodeMarkerLabels.Add(displayName, unicodeLabel);
+                }
+            }
+            Vector2 size = unicodeLabel != null
+                ? new Vector2(unicodeLabel.Width, unicodeLabel.Height)
+                : _markerFont.MeasureString(displayName);
 
             if (rot.X + size.X / 2 > x + Width - 8)
             {
@@ -2638,12 +2755,18 @@ namespace ClassicUO.Game.UI.Gumps
                 layerDepth
             );
 
+            if (unicodeLabel != null)
+            {
+                unicodeLabel.Draw(batcher, xx, yy, layerDepth);
+                return;
+            }
+
             hueVector = new Vector3(0f, 1f, 1f);
 
             batcher.DrawString
             (
                 _markerFont,
-                marker.Name,
+                displayName,
                 xx + 1,
                 yy + 1,
                 hueVector,
@@ -2655,7 +2778,7 @@ namespace ClassicUO.Game.UI.Gumps
             batcher.DrawString
             (
                 _markerFont,
-                marker.Name,
+                displayName,
                 xx,
                 yy,
                 hueVector,
@@ -3044,6 +3167,11 @@ namespace ClassicUO.Game.UI.Gumps
 
         protected override void OnMouseUp(int x, int y, MouseButtonType button)
         {
+            if (TouchMap && button == MouseButtonType.Left && !_touchPanMoved && _isScrolling)
+            {
+                // A tap does not disable player-following; dragging enters free view.
+                _isScrolling = false;
+            }
             var allowTarget = _allowPositionalTarget && World.TargetManager.IsTargeting && World.TargetManager.TargetingState == CursorTarget.Position;
             if (allowTarget && button == MouseButtonType.Left)
             {
@@ -3069,9 +3197,13 @@ namespace ClassicUO.Game.UI.Gumps
 
         protected override void OnMouseDown(int x, int y, MouseButtonType button)
         {
+            _touchPanMoved = false;
             if (!Client.Game.UO.GameCursor.ItemHold.Enabled)
             {
-                if (button == MouseButtonType.Left && (Keyboard.Alt || _freeView) || button == MouseButtonType.Middle)
+                float radius = (Width - 8) / 2f;
+                float dx = x - Width / 2f, dy = y - (4 + radius);
+                bool touchInterior = TouchMap && dx * dx + dy * dy < (radius - 14) * (radius - 14);
+                if (button == MouseButtonType.Left && (Keyboard.Alt || _freeView || touchInterior) || button == MouseButtonType.Middle)
                 {
                     if (x > 4 && x < Width - 8 && y > 4 && y < Height - 8)
                     {
@@ -3119,6 +3251,11 @@ namespace ClassicUO.Game.UI.Gumps
 
             if (_isScrolling && offset != Point.Zero)
             {
+                if (TouchMap)
+                {
+                    _touchPanMoved = true;
+                    _freeView = true;
+                }
                 _scroll.X = _scroll.Y = 0;
 
                 if (Mouse.LButtonPressed)
@@ -3202,6 +3339,12 @@ namespace ClassicUO.Game.UI.Gumps
 
         protected override bool OnMouseDoubleClick(int x, int y, MouseButtonType button)
         {
+            if (TouchMap && button == MouseButtonType.Left)
+            {
+                FreeView = false;
+                _center = new Point(World.Player.X, World.Player.Y);
+                return true;
+            }
             if (button != MouseButtonType.Left || _isScrolling || Keyboard.Alt)
             {
                 return base.OnMouseDoubleClick(x, y, button);

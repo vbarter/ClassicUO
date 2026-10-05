@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Configuration;
 using ClassicUO.Game;
@@ -78,8 +78,8 @@ namespace ClassicUO
                 return new Rectangle(
                     window_rectangle.X,
                     window_rectangle.Y,
-                    (int)((float)(window_rectangle.Width) / DpiScale),
-                    (int)((float)(window_rectangle.Height) / DpiScale)
+                    (int)((ClientHooks.Platform.HighResolutionUI ? GraphicManager.PreferredBackBufferWidth : window_rectangle.Width) / DpiScale),
+                    (int)((ClientHooks.Platform.HighResolutionUI ? GraphicManager.PreferredBackBufferHeight : window_rectangle.Height) / DpiScale)
                 );
             }
         }
@@ -270,9 +270,8 @@ namespace ClassicUO
 
             if (ClientHooks.Platform.FixedWindowSize)
             {
-                // The window cannot change size, keep the back buffer matching it
-                width = Window.ClientBounds.Width;
-                height = Window.ClientBounds.Height;
+                // Use native pixels for the framebuffer; input remains in window points.
+                SDL_GetWindowSizeInPixels(Window.Handle, out width, out height);
             }
 
             GraphicManager.PreferredBackBufferWidth = width;
@@ -506,7 +505,8 @@ namespace ClassicUO
                 GraphicsDevice,
                 new Rectangle(0, 0, GraphicManager.PreferredBackBufferWidth, GraphicManager.PreferredBackBufferHeight),
                 Scene.Camera.Bounds,
-                DpiScale
+                DpiScale,
+                ClientHooks.Platform.HighResolutionUI
             );
 
             Profiler.EndFrame();
@@ -529,6 +529,7 @@ namespace ClassicUO
             }
 
             _uoSpriteBatch.GraphicsDevice.SetRenderTarget(_renderTargets.UiRenderTarget);
+            _uoSpriteBatch.DefaultTransform = ClientHooks.Platform.HighResolutionUI ? Matrix.CreateScale(DpiScale, DpiScale, 1f) : Matrix.Identity;
             GraphicsDevice.Clear(Color.Transparent);
 
             if ((UO.World?.InGame ?? false) && SelectedObject.Object is TextObject t)
@@ -567,6 +568,7 @@ namespace ClassicUO
                 _uoSpriteBatch.End();
             }
 
+            _uoSpriteBatch.DefaultTransform = Matrix.Identity;
             _uoSpriteBatch.GraphicsDevice.SetRenderTarget(null);
 
             _renderTargets.Draw(_uoSpriteBatch);
@@ -592,7 +594,9 @@ namespace ClassicUO
 
         public float DpiScale
         {
-            get => SDL_GetWindowDisplayScale(Window.Handle) * ScreenScale;
+            get => ClientHooks.Platform.HighResolutionUI
+                ? (float)GraphicManager.PreferredBackBufferWidth / Math.Max(1, Window.ClientBounds.Width) * ScreenScale
+                : SDL_GetWindowDisplayScale(Window.Handle) * ScreenScale;
         }
 
         public int ScaleWithDpi(int value, float previousDpi = 1)

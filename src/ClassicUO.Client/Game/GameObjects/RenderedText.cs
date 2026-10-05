@@ -1,4 +1,4 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Assets;
 using ClassicUO.Renderer;
@@ -276,7 +276,7 @@ namespace ClassicUO.Game
 
             foreach (char c in text)
             {
-                if (c > 0xFF)
+                if (c > 0xFF || (ClassicUO.Platform.ClientHooks.Platform.HighResolutionUI && !SaveHitMap))
                 {
                     IsUnicode = true;
                     Font = FALLBACK_UNICODE_FONT;

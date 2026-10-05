@@ -7,6 +7,7 @@ using ClassicUO.Game.Scenes;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Input;
 using ClassicUO.Network;
+using ClassicUO.Platform;
 using ClassicUO.Renderer;
 using ClassicUO.Resources;
 using SDL3;
@@ -67,7 +68,7 @@ namespace ClassicUO.Game.UI.Gumps
 
             TextBoxControl = new StbTextBox
             (
-                ProfileManager.CurrentProfile.ChatFont,
+                ClientHooks.Platform.HighResolutionUI ? (byte)1 : ProfileManager.CurrentProfile.ChatFont,
                 TEXTBOX_LENGTH,
                 Width,
                 true,
@@ -563,7 +564,20 @@ namespace ClassicUO.Game.UI.Gumps
 
         public override bool AddToRenderLists(RenderLists renderLists, int x, int y, ref float layerDepthRef)
         {
-            int yy = TextBoxControl.Y + y - 20;
+            bool mobile = ClientHooks.Platform.HighResolutionUI;
+            int yy = mobile ? y + 8 : TextBoxControl.Y + y - 20;
+            if (mobile)
+            {
+                TopBarGump menu = UIManager.GetGump<TopBarGump>();
+                if (menu != null && menu.IsVisible && !menu.IsDisposed
+                    && menu.ScreenCoordinateY <= y + 40
+                    && menu.ScreenCoordinateX < x + 320
+                    && menu.ScreenCoordinateX + menu.Width > x)
+                {
+                    yy = Math.Max(yy, menu.ScreenCoordinateY + menu.Height + 8);
+                }
+            }
+            int messageBottom = y + Height / 2;
             var scale = 1f;
 
             LinkedListNode<ChatLineTime> last = _textEntries.Last;
@@ -582,11 +596,18 @@ namespace ClassicUO.Game.UI.Gumps
                     }
                     else
                     {
-                        yy -= last.Value.TextHeight;
-
-                        if (yy >= y)
+                        if (mobile)
                         {
-                            last.Value.Draw(batcher, x + 2, yy, depth, scale);
+                            // Newest first, below the menu; keep notices away from the joystick.
+                            if (yy + last.Value.TextHeight <= messageBottom)
+                                last.Value.Draw(batcher, x + 8, yy, depth, scale);
+                            yy += last.Value.TextHeight + 3;
+                        }
+                        else
+                        {
+                            yy -= last.Value.TextHeight;
+                            if (yy >= y)
+                                last.Value.Draw(batcher, x + 2, yy, depth, scale);
                         }
                     }
 
@@ -1077,13 +1098,20 @@ namespace ClassicUO.Game.UI.Gumps
 
             public ChatLineTime(string text, byte font, bool isunicode, ushort hue)
             {
+                // Legacy font 3 uses narrow, tall metrics that distort Retina glyphs.
+                bool mobile = ClientHooks.Platform.HighResolutionUI;
+                if (mobile)
+                {
+                    font = 1;
+                    isunicode = true;
+                }
                 _renderedText = RenderedText.Create
                 (
                     text,
                     hue,
                     font,
                     isunicode,
-                    FontStyle.BlackBorder,
+                    FontStyle.BlackBorder | (mobile ? FontStyle.Solid : FontStyle.None),
                     maxWidth: 320
                 );
                 _createdTime = Time.Ticks + Constants.TIME_DISPLAY_SYSTEM_MESSAGE_TEXT;

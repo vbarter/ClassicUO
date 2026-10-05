@@ -7,6 +7,7 @@ using ClassicUO.Game.GameObjects;
 using ClassicUO.Game.UI.Controls;
 using ClassicUO.Game.UI.Gumps;
 using ClassicUO.Network;
+using ClassicUO.Resources;
 using ClassicUO.Utility;
 using System;
 using System.Collections.Generic;
@@ -97,6 +98,11 @@ namespace ClassicUO.Game.Managers
                 return;
             }
 
+            // Only server/system text is eligible. Never rewrite player speech or guild/party chat.
+            text = UiLocalization.SystemMessage(text, type,
+                parent == null && textType == TextType.SYSTEM &&
+                string.Equals(name, "System", StringComparison.OrdinalIgnoreCase));
+
             Profile currentProfile = ProfileManager.CurrentProfile;
 
             if (currentProfile != null && currentProfile.OverrideAllFonts)
@@ -104,6 +110,8 @@ namespace ClassicUO.Game.Managers
                 font = currentProfile.ChatFont;
                 unicode = currentProfile.OverrideAllFontsIsUnicode;
             }
+
+            unicode |= UiLocalization.RequiresUnicode(text);
 
             switch (type)
             {
@@ -159,15 +167,13 @@ namespace ClassicUO.Game.Managers
                     {
                         if (currentProfile != null && currentProfile.EnabledSpellFormat && !string.IsNullOrWhiteSpace(currentProfile.SpellDisplayFormat))
                         {
-                            ValueStringBuilder sb = new ValueStringBuilder(currentProfile.SpellDisplayFormat.AsSpan());
-                            {
-                                sb.Replace("{power}".AsSpan(), spell.PowerWords.AsSpan());
-                                sb.Replace("{spell}".AsSpan(), spell.Name.AsSpan());
-
-                                text = sb.ToString().Trim();
-                            }
-                            sb.Dispose();
+                            text = spell.GetDisplayMessage(currentProfile.SpellDisplayFormat);
                         }
+                        else
+                        {
+                            text = spell.GetDisplayMessage();
+                        }
+                        unicode |= UiLocalization.RequiresUnicode(text);
 
                         //server hue color per default if not enabled
                         if (currentProfile != null && currentProfile.EnabledSpellHue)
@@ -304,6 +310,8 @@ namespace ClassicUO.Game.Managers
                 font = ProfileManager.CurrentProfile.ChatFont;
                 isunicode = ProfileManager.CurrentProfile.OverrideAllFontsIsUnicode;
             }
+
+            isunicode |= UiLocalization.RequiresUnicode(msg);
 
             int width = isunicode ? Client.Game.UO.FileManager.Fonts.GetWidthUnicode(font, msg) : Client.Game.UO.FileManager.Fonts.GetWidthASCII(font, msg);
 

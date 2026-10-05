@@ -8,11 +8,15 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using System.Xml;
+using ClassicUO.Platform;
+using ClassicUO.Input;
+using static SDL3.SDL;
 
 namespace ClassicUO.Game.UI.Gumps
 {
     internal class Gump : Control
     {
+        private TouchCloseButton _touchClose;
         public Gump(World world, uint local, uint server)
         {
             World = world;
@@ -46,8 +50,57 @@ namespace ClassicUO.Game.UI.Gumps
                 ActivePage = 1;
             }
 
+            // The synthetic chrome must not keep a paged server window at its old size.
+            if (_touchClose != null) _touchClose.IsVisible = false;
             base.Update();
+
+            UpdateTouchClose();
         }
+
+        private void UpdateTouchClose()
+        {
+            bool eligible = ClientHooks.Platform.FixedWindowSize && World.InGame && CanCloseWithRightClick
+                && Width >= 80 && Height >= 70 && !(this is WorldViewportGump)
+                && GumpType != GumpType.Buff && GumpType != GumpType.HealthBar
+                && GumpType != GumpType.CounterBar && GumpType != GumpType.InfoBar
+                && GumpType != GumpType.MacroButton && GumpType != GumpType.AbilityButton
+                && GumpType != GumpType.SpellButton && GumpType != GumpType.SkillButton
+                && GumpType != GumpType.RacialButton && GumpType != GumpType.NameOverHeadHandler;
+            if (!eligible)
+            {
+                if (_touchClose != null) _touchClose.IsVisible = false;
+                return;
+            }
+            if (_touchClose == null || _touchClose.IsDisposed || _touchClose.Parent != this)
+            {
+                _touchClose = new TouchCloseButton(this);
+                Add(_touchClose);
+            }
+            var game = Client.Game;
+            var size = Mouse.WindowToGame(44, 44, game.GraphicManager.PreferredBackBufferWidth,
+                game.GraphicManager.PreferredBackBufferHeight, game.Window.ClientBounds.Width,
+                game.Window.ClientBounds.Height, game.DpiScale);
+            _touchClose.Width = Math.Max(44, size.X);
+            _touchClose.Height = Math.Max(44, size.Y);
+            Rectangle safeBounds = game.ClientBounds;
+            if (SDL_GetWindowSafeArea(game.Window.Handle, out SDL_Rect safe))
+            {
+                Point topLeft = Mouse.WindowToGame(safe.x, safe.y, game.GraphicManager.PreferredBackBufferWidth,
+                    game.GraphicManager.PreferredBackBufferHeight, game.Window.ClientBounds.Width,
+                    game.Window.ClientBounds.Height, game.DpiScale);
+                Point bottomRight = Mouse.WindowToGame(safe.x + safe.w, safe.y + safe.h, game.GraphicManager.PreferredBackBufferWidth,
+                    game.GraphicManager.PreferredBackBufferHeight, game.Window.ClientBounds.Width,
+                    game.Window.ClientBounds.Height, game.DpiScale);
+                safeBounds = new Rectangle(topLeft.X, topLeft.Y, bottomRight.X - topLeft.X, bottomRight.Y - topLeft.Y);
+            }
+            // Remain inside the root hit bounds, in a corner outside the circular map.
+            _touchClose.X = Math.Clamp(Width - _touchClose.Width, safeBounds.Left - X, Math.Max(safeBounds.Left - X, safeBounds.Right - X - _touchClose.Width));
+            _touchClose.Y = Math.Clamp(0, safeBounds.Top - Y, Math.Max(safeBounds.Top - Y, safeBounds.Bottom - Y - _touchClose.Height));
+            _touchClose.IsVisible = true;
+        }
+
+        protected bool ContainsTouchClose(int x, int y) => _touchClose != null && _touchClose.IsVisible
+            && !_touchClose.IsDisposed && _touchClose.Bounds.Contains(x, y);
 
         public override void Dispose()
         {

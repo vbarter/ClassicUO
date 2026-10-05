@@ -2,6 +2,7 @@
 
 using ClassicUO.Game.Scenes;
 using ClassicUO.Input;
+using ClassicUO.Resources;
 using ClassicUO.Network;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
@@ -76,6 +77,7 @@ namespace ClassicUO.Game.UI.Controls
 
     internal class GumpPic : GumpPicBase
     {
+        private readonly RenderedText _localizedText;
         public GumpPic(int x, int y, ushort graphic, ushort hue)
         {
             X = x;
@@ -83,6 +85,8 @@ namespace ClassicUO.Game.UI.Controls
             Graphic = graphic;
             Hue = hue;
             IsFromServer = true;
+            string text = UiLocalization.GraphicText(graphic);
+            if (text != null) _localizedText = RenderedText.Create(text, 0, 1, true, maxWidth: Width);
         }
 
         public GumpPic(List<string> parts)
@@ -102,6 +106,13 @@ namespace ClassicUO.Game.UI.Controls
                 )
             )
         { }
+
+        public override void Dispose()
+        {
+            if (IsDisposed) return;
+            _localizedText?.Destroy();
+            base.Dispose();
+        }
 
         public bool ContainsByBounds { get; set; }
 
@@ -128,6 +139,13 @@ namespace ClassicUO.Game.UI.Controls
             if (IsDisposed)
             {
                 return false;
+            }
+
+            if (_localizedText != null)
+            {
+                renderLists.AddGumpNoAtlas(_localizedText, x + ((Width - _localizedText.Width) >> 1),
+                    y + ((Height - _localizedText.Height) >> 1), layerDepth);
+                return base.AddToRenderLists(renderLists, x, y, ref layerDepthRef);
             }
 
             Vector3 hueVector = ShaderHueTranslator.GetHueVector(Hue, IsPartialHue, Alpha, true);

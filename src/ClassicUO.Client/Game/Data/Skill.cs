@@ -38,11 +38,13 @@ namespace ClassicUO.Game.Data
 
         public string Name { get; }
 
+        public string DisplayName => UiLocalization.Translate(Name);
+
         public int Index { get; }
 
         public override string ToString()
         {
-            return string.Format(ResGeneral.Name0Val1, Name, Value);
+            return string.Format(ResGeneral.Name0Val1, DisplayName, Value);
         }
     }
 }

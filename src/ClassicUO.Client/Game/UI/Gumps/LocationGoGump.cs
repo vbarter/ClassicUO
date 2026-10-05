@@ -104,7 +104,7 @@ internal partial class LocationGoGump : Gump
         
         Add
         (
-            new Label("Examples:\n 1639, 1532\n 100o25'S,40o04'E\n 9 14'N 91 37'W", true, 0xFFFF, Width - 90, 0xFF)
+            new Label(UiLocalization.Format("Examples:\n 1639, 1532\n 100o25'S,40o04'E\n 9 14'N 91 37'W", "\u793a\u4f8b:\n 1639, 1532\n 100o25'S,40o04'E\n 9 14'N 91 37'W"), true, 0xFFFF, Width - 90, 0xFF)
             {
                 X = _textBox.X - 6,
                 Y = _textBox.Y + 28,

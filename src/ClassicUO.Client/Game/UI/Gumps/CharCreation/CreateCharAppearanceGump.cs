@@ -421,7 +421,8 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
             // Hair
             CharacterCreationValues.ComboContent content = CharacterCreationValues.GetHairComboContent(_characterInfo.IsFemale, race);
 
-            bool isAsianLang = string.Compare(Settings.GlobalSettings.Language, "CHT", StringComparison.InvariantCultureIgnoreCase) == 0 ||
+            bool isAsianLang = string.Compare(Settings.GlobalSettings.Language, "CHS", StringComparison.InvariantCultureIgnoreCase) == 0 ||
+                string.Compare(Settings.GlobalSettings.Language, "CHT", StringComparison.InvariantCultureIgnoreCase) == 0 ||
                 string.Compare(Settings.GlobalSettings.Language, "KOR", StringComparison.InvariantCultureIgnoreCase) == 0 ||
                 string.Compare(Settings.GlobalSettings.Language, "JPN", StringComparison.InvariantCultureIgnoreCase) == 0;
 
@@ -1043,7 +1044,8 @@ namespace ClassicUO.Game.UI.Gumps.CharCreation
                 _layer = layer;
                 _pallet = pallet;
 
-                bool isAsianLang = string.Compare(Settings.GlobalSettings.Language, "CHT", StringComparison.InvariantCultureIgnoreCase) == 0 ||
+                bool isAsianLang = string.Compare(Settings.GlobalSettings.Language, "CHS", StringComparison.InvariantCultureIgnoreCase) == 0 ||
+                string.Compare(Settings.GlobalSettings.Language, "CHT", StringComparison.InvariantCultureIgnoreCase) == 0 ||
                     string.Compare(Settings.GlobalSettings.Language, "KOR", StringComparison.InvariantCultureIgnoreCase) == 0 ||
                     string.Compare(Settings.GlobalSettings.Language, "JPN", StringComparison.InvariantCultureIgnoreCase) == 0;
 

@@ -381,7 +381,7 @@ namespace ClassicUO.Game.UI.Gumps
                                 icon.MouseDoubleClick += OnIconDoubleClick;
                                 icon.DragBegin += OnIconDragBegin;
 
-                                text = new Label(spell.Name, false, 0x0288, 80, 6)
+                                text = new Label(spell.DisplayName, false, 0x0288, 80, 6)
                                 {
                                     X = 225 + 44 + 4,
                                     Y = iconMY + 2
@@ -1030,7 +1030,7 @@ namespace ClassicUO.Game.UI.Gumps
                 default:
                 case SpellBookType.Magery:
                     SpellDefinition def = SpellsMagery.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.DisplayName;
                     abbreviature = SpellsMagery.SpecialReagentsChars[offset];
                     reagents = def.CreateReagentListString("\n");
 
@@ -1038,7 +1038,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Necromancy:
                     def = SpellsNecromancy.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.DisplayName;
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
 
@@ -1046,7 +1046,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Chivalry:
                     def = SpellsChivalry.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.DisplayName;
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
@@ -1054,7 +1054,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Bushido:
                     def = SpellsBushido.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.DisplayName;
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
@@ -1062,7 +1062,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Ninjitsu:
                     def = SpellsNinjitsu.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.DisplayName;
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
@@ -1070,7 +1070,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Spellweaving:
                     def = SpellsSpellweaving.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.DisplayName;
                     abbreviature = def.PowerWords;
                     reagents = string.Empty;
 
@@ -1078,7 +1078,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Mysticism:
                     def = SpellsMysticism.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.DisplayName;
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
 
@@ -1086,7 +1086,7 @@ namespace ClassicUO.Game.UI.Gumps
 
                 case SpellBookType.Mastery:
                     def = SpellsMastery.GetSpell(offset + 1);
-                    name = def.Name;
+                    name = def.DisplayName;
                     abbreviature = def.PowerWords;
                     reagents = def.CreateReagentListString("\n");
 

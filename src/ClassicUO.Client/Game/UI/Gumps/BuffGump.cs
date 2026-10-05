@@ -313,10 +313,12 @@ namespace ClassicUO.Game.UI.Gumps
                 WantUpdateSize = false;
                 CanMove = true;
 
-                SetTooltip(icon.Text + $"\nID: {icon.Type}");
+                SetTooltip(TooltipText);
             }
 
             public BuffIcon Icon { get; }
+
+            private string TooltipText => UiLocalization.IsChinese ? Icon.Text : Icon.Text + $"\nID: {Icon.Type}";
 
             public override void Update()
             {
@@ -333,7 +335,7 @@ namespace ClassicUO.Game.UI.Gumps
                         SetTooltip(
                             string.Format(
                                 ResGumps.TimeLeft,
-                                Icon.Text + $"\nID: {Icon.Type}",
+                                TooltipText,
                                 span.Hours,
                                 span.Minutes,
                                 span.Seconds

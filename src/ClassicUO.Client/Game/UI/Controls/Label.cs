@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Resources;
 using ClassicUO.Assets;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Utility;
@@ -25,7 +26,7 @@ namespace ClassicUO.Game.UI.Controls
         {
             _gText = RenderedText.Create
             (
-                text,
+                UiLocalization.Translate(text),
                 hue,
                 font,
                 isunicode,
@@ -59,7 +60,7 @@ namespace ClassicUO.Game.UI.Controls
             get => _gText.Text;
             set
             {
-                _gText.Text = value;
+                _gText.Text = UiLocalization.Translate(value);
                 Width = _gText.Width;
                 Height = _gText.Height;
             }

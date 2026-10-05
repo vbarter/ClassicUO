@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Resources;
 using ClassicUO.Assets;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Input;
@@ -95,7 +96,7 @@ namespace ClassicUO.Game.UI.Controls
         public string Text
         {
             get => _gameText.Text;
-            set => _gameText.Text = value;
+            set => _gameText.Text = UiLocalization.Html(value);
         }
 
         private void InternalBuild(string text, int hue)
@@ -142,7 +143,7 @@ namespace ClassicUO.Game.UI.Controls
                 }
 
                 _gameText.HasBackgroundColor = !HasBackground;
-                _gameText.Text = text;
+                _gameText.Text = UiLocalization.Html(text);
             }
 
             if (HasBackground)

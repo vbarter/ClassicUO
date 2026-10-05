@@ -1,7 +1,8 @@
-﻿// SPDX-License-Identifier: BSD-2-Clause
+// SPDX-License-Identifier: BSD-2-Clause
 
 using ClassicUO.Game.Scenes;
 using ClassicUO.Input;
+using ClassicUO.Resources;
 using ClassicUO.Renderer;
 using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
@@ -42,7 +43,7 @@ namespace ClassicUO.Game.UI.Controls
 
             Width = gumpInfoInactive.UV.Width;
 
-            _text = RenderedText.Create(text, color, font, isunicode, maxWidth: maxWidth);
+            _text = RenderedText.Create(UiLocalization.Translate(text), color, font, isunicode, maxWidth: maxWidth);
 
             Width += _text.Width;
 

@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Resources;
 using ClassicUO.Game.Scenes;
 using ClassicUO.Input;
 using ClassicUO.Renderer;
@@ -7,6 +8,7 @@ using ClassicUO.Utility;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using System.Collections.Generic;
+using System;
 
 namespace ClassicUO.Game.UI.Controls
 {
@@ -20,6 +22,7 @@ namespace ClassicUO.Game.UI.Controls
     internal class Button : Control
     {
         private readonly string _caption;
+        private readonly bool _localizedArtCaption;
         private bool _entered;
         private readonly RenderedText[] _fontTexture;
         private ushort _normal,
@@ -53,20 +56,36 @@ namespace ClassicUO.Game.UI.Controls
 
             Width = gumpInfo.UV.Width;
             Height = gumpInfo.UV.Height;
-            FontHue = normalHue == ushort.MaxValue ? (ushort)0 : normalHue;
+            if (string.IsNullOrEmpty(caption))
+            {
+                caption = UiLocalization.ArtCaption(normal);
+                if (!string.IsNullOrEmpty(caption))
+                {
+                    _localizedArtCaption = true;
+                    normalHue = normal == 0x083a ? (ushort)0 : ushort.MaxValue;
+                    FontCenter = true;
+                    hoverHue = 0x0035;
+                    font = 1;
+                    isunicode = true;
+                }
+            }
+
+            FontHue = _localizedArtCaption ? normalHue : normalHue == ushort.MaxValue ? (ushort)0 : normalHue;
             HueHover = hoverHue == ushort.MaxValue ? normalHue : hoverHue;
 
-            if (!string.IsNullOrEmpty(caption) && normalHue != ushort.MaxValue)
+            if (!string.IsNullOrEmpty(caption) && (_localizedArtCaption || normalHue != ushort.MaxValue))
             {
                 _fontTexture = new RenderedText[2];
 
                 _caption = caption;
 
-                _fontTexture[0] = RenderedText.Create(caption, FontHue, font, isunicode);
+                _fontTexture[0] = RenderedText.Create(UiLocalization.Translate(caption), FontHue, font, isunicode);
+
+                _fontTexture[1] = _fontTexture[0];
 
                 if (hoverHue != ushort.MaxValue)
                 {
-                    _fontTexture[1] = RenderedText.Create(caption, HueHover, font, isunicode);
+                    _fontTexture[1] = RenderedText.Create(UiLocalization.Translate(caption), HueHover, font, isunicode);
                 }
             }
 
@@ -115,6 +134,15 @@ namespace ClassicUO.Game.UI.Controls
             set
             {
                 _normal = value;
+                if (_localizedArtCaption)
+                {
+                    string caption = UiLocalization.ArtCaption(value);
+                    if (!string.IsNullOrEmpty(caption))
+                    {
+                        _fontTexture[0].Text = caption;
+                        _fontTexture[1].Text = caption;
+                    }
+                }
 
                 ref readonly var gumpInfo = ref Client.Game.UO.Gumps.GetGump(value);
 
@@ -210,7 +238,14 @@ namespace ClassicUO.Game.UI.Controls
             renderLists.AddGumpWithAtlas(
                 batcher =>
                 {
-                    batcher.Draw(texture, new Rectangle(x, y, Width, Height), bounds, hue, layerDepth);
+                    if (!_localizedArtCaption || _normal != 0x083a)
+                        batcher.Draw(texture, new Rectangle(x, y, Width, Height), bounds, hue, layerDepth);
+                    if (_localizedArtCaption && _normal != 0x083a)
+                    {
+                        batcher.Draw(SolidColorTextureCache.GetTexture(new Color(22, 37, 55)),
+                            new Rectangle(x + 4, y + 3, Math.Max(1, Width - 8), Math.Max(1, Height - 6)),
+                            new Vector3(0, 0, Alpha), layerDepth);
+                    }
                     return true;
                 });
             
@@ -295,10 +330,8 @@ namespace ClassicUO.Game.UI.Controls
         {
             if (_fontTexture != null)
             {
-                foreach (RenderedText t in _fontTexture)
-                {
-                    t?.Destroy();
-                }
+                _fontTexture[0]?.Destroy();
+                if (!ReferenceEquals(_fontTexture[0], _fontTexture[1])) _fontTexture[1]?.Destroy();
             }
 
             base.Dispose();

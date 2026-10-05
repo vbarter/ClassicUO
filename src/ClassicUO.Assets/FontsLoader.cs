@@ -3775,6 +3775,8 @@ namespace ClassicUO.Assets
 
         public struct SingleGlyphInfo
         {
+            // Bitmap resolution can exceed its logical layout dimensions.
+            public int RasterScale;
             public uint[] Data;
             public int Width;
             public int Height;

@@ -284,8 +284,8 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 (
                     _serverName = new HoveredLabel
                     (
-                        entry.Name,
-                        false,
+                        entry.Name == "Shui Yu Zheng Feng" ? "谁与争锋" : entry.Name,
+                        true,
                         normal_hue,
                         selected_hue,
                         selected_hue,

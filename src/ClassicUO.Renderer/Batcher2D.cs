@@ -895,6 +895,9 @@ namespace ClassicUO.Renderer
             Begin(null, Matrix.Identity);
         }
 
+        /// <summary>Scales logical UI coordinates into a native-resolution target. Identity for the world.</summary>
+        public Matrix DefaultTransform { get; set; } = Matrix.Identity;
+
         public void Begin(Effect effect)
         {
             Begin(effect, Matrix.Identity);
@@ -909,7 +912,7 @@ namespace ClassicUO.Renderer
             FlushesDone = 0;
 
             _customEffect = customEffect;
-            _transformMatrix = transform_matrix;
+            _transformMatrix = transform_matrix * DefaultTransform;
         }
 
         public void End()
