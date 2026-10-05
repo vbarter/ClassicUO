@@ -90,6 +90,9 @@ namespace ClassicUO.Game.UI.Gumps
         private bool _showPlayerBar = true;
         private bool _showPlayerName = true;
         private int _zoomIndex = 4;
+
+        // Continuous zoom from a pinch; null uses the fixed steps (mouse wheel)
+        private float? _smoothZoom;
         private bool _showGridIfZoomed = true;
         private bool _allowPositionalTarget = false;
         private WMapMarker _gotoMarker;
@@ -135,7 +138,7 @@ namespace ClassicUO.Game.UI.Gumps
         }
 
         public override GumpType GumpType => GumpType.WorldMap;
-        public float Zoom => _zooms[_zoomIndex];
+        public float Zoom => _smoothZoom ?? _zooms[_zoomIndex];
 
         public bool TopMost
         {
@@ -209,11 +212,16 @@ namespace ClassicUO.Game.UI.Gumps
                 || (y >= Height - 28 && x >= 0 && x < Width);
         }
 
+        /// <summary>Pinch zoom: any value between the smallest and largest step, applied smoothly.</summary>
         public void SetTouchZoom(float zoom)
         {
+            float clamped = Math.Clamp(zoom, _zooms[0], _zooms[_zooms.Length - 1]);
+            _smoothZoom = clamped;
+
+            // The nearest step (by ratio) still decides which markers and names are shown
             int nearest = 0;
             for (int i = 1; i < _zooms.Length; i++)
-                if (Math.Abs(_zooms[i] - zoom) < Math.Abs(_zooms[nearest] - zoom)) nearest = i;
+                if (Math.Abs(MathF.Log(_zooms[i] / clamped)) < Math.Abs(MathF.Log(_zooms[nearest] / clamped))) nearest = i;
             _zoomIndex = nearest;
         }
 
@@ -3313,6 +3321,8 @@ namespace ClassicUO.Game.UI.Gumps
 
         protected override void OnMouseWheel(MouseEventType delta)
         {
+            _smoothZoom = null;
+
             if (delta == MouseEventType.WheelScrollUp)
             {
                 _zoomIndex++;
