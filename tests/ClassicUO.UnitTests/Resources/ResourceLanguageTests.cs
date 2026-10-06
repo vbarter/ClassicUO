@@ -169,6 +169,74 @@ namespace ClassicUO.UnitTests.Resources
             finally { ResourceLanguage.Apply("ENU"); }
         }
 
+        [Theory]
+        [InlineData("Target System: Off", "目标系统：已关闭")]
+        [InlineData("Target System: On", "目标系统：已开启")]
+        [InlineData("House not legal, not committing!", "房屋结构不合法，无法提交！")]
+        public void Client_Feedback_Uses_System_Translations_Without_Rewriting_Player_Speech(string english, string chinese)
+        {
+            try
+            {
+                ResourceLanguage.Apply("CHS");
+                // GameActions.Print emits Regular messages with a null parent and System identity.
+                Assert.Equal(chinese, UiLocalization.SystemMessage(english, MessageType.Regular, serverSystem: true));
+                Assert.Equal(chinese, UiLocalization.SystemMessage(english, MessageType.System));
+                foreach (var type in new[] { MessageType.Regular, MessageType.Party, MessageType.Guild,
+                    MessageType.Alliance, MessageType.Whisper, MessageType.Yell, MessageType.Emote })
+                    Assert.Equal(english, UiLocalization.SystemMessage(english, type));
+
+                ResourceLanguage.Apply("ENU");
+                Assert.Equal(english, UiLocalization.SystemMessage(english, MessageType.Regular, serverSystem: true));
+                Assert.Equal(english, UiLocalization.SystemMessage(english, MessageType.System));
+            }
+            finally { ResourceLanguage.Apply("ENU"); }
+        }
+
+        [Theory]
+        [InlineData("none", "无")]
+        [InlineData("red", "红色")]
+        [InlineData("green", "绿色")]
+        [InlineData("blue", "蓝色")]
+        [InlineData("purple", "紫色")]
+        [InlineData("black", "黑色")]
+        [InlineData("yellow", "黄色")]
+        [InlineData("white", "白色")]
+        public void Marker_Color_Captions_Preserve_Stored_Keys_And_English(string key, string chinese)
+        {
+            try
+            {
+                string[] storedKeys = { key };
+                ResourceLanguage.Apply("CHS");
+                string[] captions = Array.ConvertAll(storedKeys, UiLocalization.MarkerColorName);
+                Assert.Equal(chinese, captions[0]);
+                Assert.Equal(key, storedKeys[0]);
+                // This mapping is scoped to marker captions, not arbitrary labels or player names.
+                Assert.Equal(key, UiLocalization.Translate(key));
+
+                ResourceLanguage.Apply("ENU");
+                Assert.Equal(key, UiLocalization.MarkerColorName(storedKeys[0]));
+                Assert.Equal(key, storedKeys[0]);
+            }
+            finally { ResourceLanguage.Apply("ENU"); }
+        }
+
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        [InlineData("custom-color")]
+        [InlineData("Red")]
+        public void Marker_Color_Captions_Preserve_Unknown_Keys(string key)
+        {
+            try
+            {
+                ResourceLanguage.Apply("CHS");
+                Assert.Equal(key, UiLocalization.MarkerColorName(key));
+                ResourceLanguage.Apply("ENU");
+                Assert.Equal(key, UiLocalization.MarkerColorName(key));
+            }
+            finally { ResourceLanguage.Apply("ENU"); }
+        }
+
         [Fact]
         public void Language_Code_Is_Case_Insensitive()
         {

@@ -187,7 +187,7 @@ namespace ClassicUO.Game.UI.Gumps
                     fx + LABEL_OFFSET,
                     fy,
                     250,
-                    _colors,
+                    _colors.Select(UiLocalization.MarkerColorName).ToArray(),
                     selectedColor
                 );
             Add(_colorsCombo);

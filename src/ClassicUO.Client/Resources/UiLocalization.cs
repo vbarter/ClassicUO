@@ -818,6 +818,9 @@ namespace ClassicUO.Resources
 
         private static readonly Dictionary<string, string> SystemMessages = new Dictionary<string, string>(StringComparer.Ordinal)
         {
+            ["Target System: Off"] = "目标系统：已关闭",
+            ["Target System: On"] = "目标系统：已开启",
+            ["House not legal, not committing!"] = "房屋结构不合法，无法提交！",
             ["Target can not be revived this way."] = "无法用这种方式复活目标。",
             ["That familiar has not yet been defined."] = "尚未定义这种使魔。",
             ["The other gate no longer exists."] = "另一端的传送门已不存在。",
@@ -839,6 +842,20 @@ namespace ClassicUO.Resources
 
         public static string ChatChannelName(string name) =>
             IsChinese && name == "General" ? "综合" : name;
+
+        // Color keys are persisted in marker files; translate only their dropdown captions.
+        public static string MarkerColorName(string color) => !IsChinese ? color : color switch
+        {
+            "none" => "无",
+            "red" => "红色",
+            "green" => "绿色",
+            "blue" => "蓝色",
+            "purple" => "紫色",
+            "black" => "黑色",
+            "yellow" => "黄色",
+            "white" => "白色",
+            _ => color
+        };
 
         public static bool RequiresUnicode(string text)
         {
