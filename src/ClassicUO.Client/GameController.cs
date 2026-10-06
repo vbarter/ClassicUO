@@ -89,6 +89,9 @@ namespace ClassicUO
         /// <summary>About four updates per second: enough for the once-per-second ping.</summary>
         private const int SuspendedUpdateDelayMs = 250;
 
+        /// <summary>Socket reads (4 KB each) drained per update: 64 KB per frame, 256 KB/s in the background.</summary>
+        private const int MaxNetworkReadsPerUpdate = 16;
+
         private readonly List<(uint, Action)> _queuedActions = new ();
 
         public void EnqueueAction(uint time, Action action)
@@ -425,8 +428,18 @@ namespace ClassicUO
 
             Mouse.Update();
 
-            var data = NetClient.Socket.CollectAvailableData();
-            var packetsCount = PacketHandlers.Handler.ParsePackets(NetClient.Socket, UO.World, data);
+            // One read takes at most 4 KB; in a crowded area (or the 4 Hz background loop) the server
+            // sends more than that per update and would drop the client once its send buffer fills.
+            var packetsCount = 0;
+            var reads = 0;
+            ArraySegment<byte> data;
+
+            do
+            {
+                data = NetClient.Socket.CollectAvailableData();
+                packetsCount += PacketHandlers.Handler.ParsePackets(NetClient.Socket, UO.World, data);
+            }
+            while (data.Count > 0 && ++reads < MaxNetworkReadsPerUpdate);
 
             NetClient.Socket.Statistics.TotalPacketsReceived += (uint)packetsCount;
             NetClient.Socket.Flush();
