@@ -5038,7 +5038,7 @@ namespace ClassicUO.Network
 
                     if (first)
                     {
-                        name = str;
+                        name = entity is Mobile && entity is not PlayerMobile ? UiLocalization.NpcName(str) : str;
 
                         if (entity != null && !SerialHelper.IsMobile(serial))
                         {

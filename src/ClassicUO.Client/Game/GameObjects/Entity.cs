@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: BSD-2-Clause
 
+using ClassicUO.Resources;
 using System;
 using System.Runtime.CompilerServices;
 using ClassicUO.Game.Data;
@@ -39,7 +40,14 @@ namespace ClassicUO.Game.GameObjects
         public byte HitsPercentage;
         public bool IsClicked;
         public uint LastStepTime;
-        public string Name;
+        private string _name;
+
+        /// <summary>Other mobiles' names are shown translated; the player's own name is never touched.</summary>
+        public string Name
+        {
+            get => _name;
+            set => _name = this is Mobile && this is not PlayerMobile ? UiLocalization.NpcName(value) : value;
+        }
         public uint Serial;
         public HitsRequestStatus HitsRequest;
 

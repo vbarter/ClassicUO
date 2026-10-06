@@ -15,11 +15,15 @@ namespace ClassicUO.Assets
         private const string MISSING_CLILOC_TEXT = "MegaCliloc: missing {0} [~1_val~] [~2_val~]";
         private string _cliloc;
         private string _translation;
+        private string _nameTranslation;
         private readonly Dictionary<int, string> _entries = new Dictionary<int, string>();
 
         public ClilocLoader(UOFileManager fileManager) : base(fileManager)
         {
         }
+
+        /// <summary>Plain-text names from the server (NPCs, creatures, titles) for the selected language.</summary>
+        public NameTranslation Names { get; } = new NameTranslation();
 
         public void Load(string lang)
         {
@@ -29,6 +33,7 @@ namespace ClassicUO.Assets
             }
 
             _translation = $"Cliloc.{lang}.txt";
+            _nameTranslation = $"Names.{lang}.txt";
 
             _cliloc = $"Cliloc.{lang}";
             Log.Trace($"searching for: '{_cliloc}'");
@@ -74,6 +79,8 @@ namespace ClassicUO.Assets
 
             ReadTranslation();
 
+            ReadNameTranslation();
+
             ReadOurs();
         }
 
@@ -101,6 +108,33 @@ namespace ClassicUO.Assets
             {
                 int added = ParseTranslation(File.ReadLines(path), _entries);
                 Log.Trace($"{added} translated cliloc string(s) from {Path.GetFileName(path)}");
+            }
+            catch (IOException e)
+            {
+                Log.Warn($"could not read {path}: {e.Message}");
+            }
+        }
+
+        private void ReadNameTranslation()
+        {
+            Names.Clear();
+
+            if (string.IsNullOrEmpty(_nameTranslation))
+            {
+                return;
+            }
+
+            string path = FileManager.GetUOFilePath(_nameTranslation);
+
+            if (!File.Exists(path))
+            {
+                return;
+            }
+
+            try
+            {
+                int added = Names.Parse(File.ReadLines(path));
+                Log.Trace($"{added} translated name(s) from {Path.GetFileName(path)}");
             }
             catch (IOException e)
             {

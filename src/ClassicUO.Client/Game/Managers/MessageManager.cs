@@ -103,6 +103,17 @@ namespace ClassicUO.Game.Managers
                 parent == null && textType == TextType.SYSTEM &&
                 string.Equals(name, "System", StringComparison.OrdinalIgnoreCase));
 
+            // An NPC's name label (single click) and the speaker name of its speech
+            if (parent is Mobile && parent is not PlayerMobile)
+            {
+                if (type == MessageType.Label)
+                {
+                    text = UiLocalization.NpcName(text);
+                }
+
+                name = UiLocalization.NpcName(name);
+            }
+
             Profile currentProfile = ProfileManager.CurrentProfile;
 
             if (currentProfile != null && currentProfile.OverrideAllFonts)

@@ -840,6 +840,13 @@ namespace ClassicUO.Resources
         public static string ChatChannelName(string name) =>
             IsChinese && name == "General" ? "综合" : name;
 
+        /// <summary>NPC or creature name sent as plain text (see <see cref="ClassicUO.Assets.NameTranslation"/>).</summary>
+        public static string NpcName(string text)
+        {
+            if (!IsChinese || string.IsNullOrEmpty(text)) return text;
+            return Client.Game?.UO?.FileManager?.Clilocs?.Names.Translate(text) ?? text;
+        }
+
         public static bool RequiresUnicode(string text)
         {
             if (text == null) return false;
