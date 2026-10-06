@@ -274,6 +274,27 @@ namespace ClassicUO.Game.UI.Gumps.Login
             private readonly HoveredLabel _serverName;
             private uint _pingCheckTime = 0;
 
+            private const string ShardName = "Shui Yu Zheng Feng";
+
+            /// <summary>
+            /// Server list names are Latin-1: "Shui Yu Zheng Feng" is the shard, "Shui Yu Zheng Feng 2"
+            /// its line 2.
+            /// </summary>
+            internal static string DisplayName(string name)
+            {
+                if (name == ShardName)
+                {
+                    return "谁与争锋";
+                }
+
+                if (name.StartsWith(ShardName + " ") && int.TryParse(name.Substring(ShardName.Length + 1), out var line))
+                {
+                    return $"谁与争锋 {line}线";
+                }
+
+                return name;
+            }
+
             public ServerEntryGump(ServerListEntry entry, byte font, ushort normal_hue, ushort selected_hue)
             {
                 _entry = entry;
@@ -284,7 +305,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
                 (
                     _serverName = new HoveredLabel
                     (
-                        entry.Name == "Shui Yu Zheng Feng" ? "谁与争锋" : entry.Name,
+                        DisplayName(entry.Name),
                         true,
                         normal_hue,
                         selected_hue,
