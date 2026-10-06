@@ -194,7 +194,7 @@ namespace ClassicUO.Game.UI.Gumps.Login
 
                 Add
                 (
-                    new Label(loginScene.Servers[index].Name, false, 0x0481, font: 9)
+                    new Label(ServerEntryGump.DisplayName(loginScene.Servers[index].Name), false, 0x0481, font: 9)
                     {
                         X = 243,
                         Y = 420
